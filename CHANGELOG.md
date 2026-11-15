@@ -3,6 +3,15 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.3.2 — 2026-11-15
+
+- The Settings, setup and train-route sheets can now be dismissed by swiping
+  them down (release past a quarter of the way and they go; a small swipe
+  springs back). The thin strip of dimmed page above a sheet still closes it
+  on a tap
+- Settings now shows which version you have under the title, e.g.
+  "Oli Commuter 1.3.2 (build 8)"
+
 ## 1.3.1 — 2026-11-15
 
 - Fix: the direction hint (which way each journey runs) was only worked out

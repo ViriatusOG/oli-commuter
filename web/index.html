@@ -394,6 +394,7 @@
   <div class="grab" aria-hidden="true"></div>
   <h2 id="sheetTitle">Settings</h2>
   <p class="lede">Saved on this phone only. Nothing is uploaded anywhere.</p>
+  <p class="fine" id="appVersion" style="margin-top:8px">Oli Commuter</p>
 
   <h3>Your stations</h3>
   <div class="stack">
@@ -1818,6 +1819,51 @@ $("btnSettings").addEventListener("click", openSheet);
 $("scrim").addEventListener("click", closeSheet);
 addEventListener("keydown", (e) => { if(e.key === "Escape") closeSheet(); });
 
+/* Swipe a sheet down to dismiss it: drag while the content sits at the top,
+   let go past a quarter of the way (or 140 px) and it goes. The thin strip of
+   dimmed page above the sheet still closes it on a tap, as before. */
+function makeSheetClosable(sheetEl, scrimEl, closer){
+  let y0 = null, dy = 0;
+  const reset = () => {
+    sheetEl.style.transform = "";
+    sheetEl.style.transition = "";
+    scrimEl.style.opacity = "";
+    y0 = null; dy = 0;
+  };
+  sheetEl.addEventListener("touchstart", e => {
+    if(e.touches.length !== 1) return;
+    if(e.target.closest && e.target.closest("select, input, button, a, textarea, details, summary")) return;
+    if(sheetEl.scrollTop > 4) return;
+    y0 = e.touches[0].clientY; dy = 0;
+    sheetEl.style.transition = "none";
+  }, { passive: true });
+  sheetEl.addEventListener("touchmove", e => {
+    if(y0 === null) return;
+    if(e.touches[0]) dy = e.touches[0].clientY - y0;
+    if(dy > 0 && sheetEl.scrollTop <= 0){
+      sheetEl.style.transform = "translateY(" + Math.round(dy * 0.92) + "px)";
+      scrimEl.style.opacity = String(Math.max(0.25, 1 - dy / (sheetEl.offsetHeight || 600)));
+    } else if(dy < -12){
+      reset();
+    }
+  }, { passive: true });
+  const finish = () => {
+    if(y0 === null) return;
+    const h = sheetEl.offsetHeight || 600;
+    sheetEl.style.transition = "transform .18s ease-out";
+    if(dy > h * 0.25 || dy > 140){
+      sheetEl.style.transform = "translateY(" + (h + 60) + "px)";
+      setTimeout(closer, 170);
+    }
+    setTimeout(reset, 220);
+  };
+  sheetEl.addEventListener("touchend", finish, { passive: true });
+  sheetEl.addEventListener("touchcancel", finish, { passive: true });
+}
+makeSheetClosable($("sheet"), $("scrim"), closeSheet);
+makeSheetClosable($("setupSheet"), $("scrim2"), () => { setupOpened = true; closeSetup(); });
+makeSheetClosable($("routeSheet"), $("scrim3"), closeRouteSheet);
+
 function syncShowAll(){
   const b = $("btnShowAll");
   if(!b) return;
@@ -1909,6 +1955,16 @@ if(isNativeApp()){
 
 if(settings.geoOn) { startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
+function showVersion(){
+  const el = $("appVersion");
+  if(!el) return;
+  const P = window.Capacitor && window.Capacitor.Plugins;
+  if(!isNativeApp() || !P || !P.App){ el.textContent = "Oli Commuter \u00b7 web"; return; }
+  P.App.getInfo()
+    .then(i => { el.textContent = "Oli Commuter " + i.version + (i.build && String(i.build) !== "0" ? " (build " + i.build + ")" : ""); })
+    .catch(() => {});
+}
+showVersion();
 </script>
 </body>
 </html>
