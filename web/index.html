@@ -43,7 +43,27 @@
   .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
 
-  .app{width:100%; max-width:540px; padding:0 14px calc(26px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px}
+  .app{width:100%; max-width:540px; padding:0 14px calc(92px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
+       transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
+  .app.is-pulling{transition:none}
+
+  /* ---------- bottom dock: the two things you tap, one thumb's reach ---------- */
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:35;border-top:1px solid var(--line);
+        background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(12px) saturate(1.2)}
+  .dock-in{width:100%;max-width:540px;margin:0 auto;display:flex;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .dock-btn{flex:1 1 0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:9px;
+            border:1px solid var(--line);background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+            font-weight:700;font-size:.95rem;letter-spacing:-.01em;cursor:pointer}
+  .dock-btn svg{width:20px;height:20px;flex:0 0 auto}
+  .dock-btn:active{transform:scale(.98)}
+  .dock-btn.spin svg{animation:spin .8s linear infinite}
+
+  /* pull-to-refresh indicator, parked where the old header buttons used to sit */
+  .pull-ind{width:44px;height:44px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;color:var(--el);
+            opacity:0;transform:scale(.55);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+  .pull-ind svg{width:22px;height:22px}
+  .pull-ind.dragging,.pull-ind.loading{opacity:1;transform:scale(1)}
+  .pull-ind.loading svg{animation:spin .8s linear infinite}
 
   /* ---------- top bar ---------- */
   .bar{
@@ -260,12 +280,9 @@
       <strong>Next train</strong>
       <span id="barSub">Elizabeth line · live departures</span>
     </div>
-    <button class="icon-btn" id="btnRefresh" title="Refresh" aria-label="Refresh departures">
+    <span class="pull-ind" id="pullInd" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg>
-    </button>
-    <button class="icon-btn" id="btnSettings" title="Settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
-    </button>
+    </span>
   </header>
 
   <div id="bannerSlot"></div>
@@ -325,6 +342,17 @@
 
   <p class="sr-only" role="status" aria-live="polite" id="announce"></p>
 </div>
+
+  <nav class="dock" aria-label="Quick actions">
+    <div class="dock-in">
+      <button class="dock-btn" id="btnRefresh" aria-label="Refresh departures">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg><span>Refresh</span>
+      </button>
+      <button class="dock-btn" id="btnSettings" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span>
+      </button>
+    </div>
+  </nav>
 
 <div id="scrim" class="scrim" hidden></div>
 <aside id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -1291,6 +1319,7 @@ async function refresh(manual){
     if(geo.pos && (geo.verdict === null || geo.verdict === "unknown")){
       maybeAutoRoute(nearestStation()); renderGeo(); syncSheet();
     }
+    if(PULL.held){ PULL.held = false; setPull(0); }
     if(manual) { try{ navigator.vibrate && navigator.vibrate(15); }catch(e){} }
   }
   // empty list but station resolved: the id may be a parent id with no predictions
@@ -1314,6 +1343,71 @@ document.addEventListener("visibilitychange", () => {
   tick();
   if(settings.auto && (!state.nextRefreshAt || Date.now() - state.fetchedAt > settings.refreshMs)) refresh();
 });
+
+/* ============================================================
+   Pull to refresh
+   Grab the board at the top and drag down; let go past the mark
+   and it refetches.  The indicator is the roundel bar's old
+   corner, so nothing moves around.
+   ============================================================ */
+const PULL_MAX = 110, PULL_ARM = 52;
+const PULL = { active:false, mode:"none", id:-1, x:0, y:0, dy:0, held:false };
+
+function setPull(dy, opts){
+  opts = opts || {};
+  const app = document.querySelector(".app"), ind = $("pullInd");
+  app.style.transform = dy ? "translate3d(0, " + dy + "px, 0)" : "";
+  app.classList.toggle("is-pulling", !!opts.dragging);
+  ind.classList.toggle("dragging", !!opts.dragging);
+  ind.classList.toggle("loading", !!opts.loading);
+  if(!opts.loading && dy > 0)
+    ind.querySelector("svg").style.transform = "rotate(" + Math.round(dy / PULL_MAX * 180) + "deg)";
+}
+
+function pullStart(e){
+  if(e.touches.length !== 1 || state.loading || PULL.held) return;
+  if(!$("sheet").hidden || (e.target.closest && e.target.closest("#sheet"))) return;
+  if(window.scrollY > 6) return;
+  const t = e.touches[0];
+  PULL.active = true; PULL.mode = "maybe";
+  PULL.id = t.identifier; PULL.x = t.clientX; PULL.y = t.clientY; PULL.dy = 0;
+}
+
+function pullMove(e){
+  if(!PULL.active) return;
+  let t = null;
+  for(const x of e.touches) if(x.identifier === PULL.id){ t = x; break; }
+  if(!t) return;
+  const dx = t.clientX - PULL.x, dy = t.clientY - PULL.y;
+  if(PULL.mode === "maybe"){
+    if(dy > 8 && dy > Math.abs(dx)) PULL.mode = "pull";
+    else if(dy < -8 || Math.abs(dx) > Math.abs(dy)){ PULL.active = false; setPull(0); return; }
+    else return;
+  }
+  e.preventDefault();
+  PULL.dy = Math.min(PULL_MAX, Math.max(0, dy * 0.55));
+  setPull(PULL.dy, { dragging: true });
+}
+
+function pullEnd(e){
+  if(!PULL.active) return;
+  let alive = false;
+  for(const x of (e.changedTouches || [])) if(x.identifier === PULL.id) alive = true;
+  PULL.active = false;
+  if(!alive || PULL.mode !== "pull"){ setPull(0); return; }
+  if(PULL.dy >= PULL_ARM){
+    PULL.held = true;
+    setPull(PULL_ARM, { loading: true });
+    refresh(true);
+  }else{
+    setPull(0);
+  }
+}
+
+document.addEventListener("touchstart", pullStart, { passive: true });
+document.addEventListener("touchmove", pullMove,  { passive: false });
+document.addEventListener("touchend",   pullEnd,  { passive: true });
+document.addEventListener("touchcancel",pullEnd,  { passive: true });
 
 /* ============================================================
    Wiring

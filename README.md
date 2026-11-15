@@ -7,7 +7,8 @@ you are standing at.
 
 | Opened on the platform at Hayes & Harlington | It explains itself in Settings |
 |---|---|
-| ![The board, opened at Hayes & Harlington](docs/screenshots/at-hayes.png) | ![Settings, with the location section open](docs/screenshots/settings.png) |
+| ![The board, opened at Hayes & Harlington](docs/screenshots/at-hayes.png) | ![Pulling down to refresh](docs/screenshots/pulling.png) |
+| ![Dark appearance](docs/screenshots/dark.png) | ![Settings, with the location section open](docs/screenshots/settings.png) |
 
 ## Install
 
@@ -36,7 +37,11 @@ id is `com.localtools.olicommuter`.
   live if the signal drops.
 - **Alerts** vibrate — and notify, if you allow it — when the next train is within your warning
   time.
-- **Dark, light or automatic**, big tap targets, works on a small phone with one thumb.
+- **One-handed by design.** Refresh and Settings sit in a bottom bar where your thumb
+  already is; the top bar is just the title. Light, dark or match-the-system appearance is
+  a setting in Settings, not a button to hunt for.
+- **Pull to refresh.** Grab the board at the top and drag down, like every other app on
+  your phone.
 
 ## What the location is used for
 

@@ -3,6 +3,17 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are `v1.2.3`.
 
+## 1.1.0 — 2026-11-15
+
+- Pull to refresh: grab the board at the top and drag down; let go and
+  it refetches
+- Refresh and Settings now live in a bottom bar where one thumb can
+  reach them; the top bar is just the title
+- Appearance (light / dark / match the system) is in Settings, not in
+  the top bar
+- Builds now sign with a fixed debug key, so this update installs
+  directly over 1.0.0
+
 ## 1.0.0 — 2026-11-15
 
 First release.
