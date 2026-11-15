@@ -1,7 +1,19 @@
 # Changelog
 
 Worth-noting changes only. The version in `package.json` and `versionName` in
-`android/app/build.gradle` move together; tags are `v1.2.3`.
+`android/app/build.gradle` move together; tags are the version with a `v` in front.
+
+## 1.2.0 — 2026-11-15
+
+- **Your two stations**: first run asks where you live and where you work; any pair on the
+  line is valid, and either station can be changed in Settings afterwards. The board, the
+  journey card and the location logic all follow the pair you pick
+- **Tap a train to see its route**: the big one and every row open the stops it serves —
+  where it is now, where it came from, the full path with your stations marked. TfL does not
+  publish each train's exact stop pattern, so the sheet says so when a semi-direct stops at
+  a subset of the route
+- The bottom refresh button is gone: refreshing is the pull, and Settings is the single
+  floating button at the bottom right
 
 ## 1.1.2 — 2026-11-15
 

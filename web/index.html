@@ -43,20 +43,35 @@
   .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
 
-  .app{width:100%; max-width:540px; padding:0 14px calc(92px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
+  .app{width:100%; max-width:540px; padding:0 14px calc(78px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
        transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
   .app.is-pulling{transition:none}
 
-  /* ---------- bottom dock: the two things you tap, one thumb's reach ---------- */
-  .dock{position:fixed;left:0;right:0;bottom:0;z-index:35;border-top:1px solid var(--line);
-        background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(12px) saturate(1.2)}
-  .dock-in{width:100%;max-width:540px;margin:0 auto;display:flex;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
-  .dock-btn{flex:1 1 0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:9px;
-            border:1px solid var(--line);background:var(--card);border-radius:16px;box-shadow:var(--shadow);
-            font-weight:700;font-size:.95rem;letter-spacing:-.01em;cursor:pointer}
-  .dock-btn svg{width:20px;height:20px;flex:0 0 auto}
-  .dock-btn:active{transform:scale(.98)}
-  .dock-btn.spin svg{animation:spin .8s linear infinite}
+  /* ---------- one-thumb reach: the single button that remains ---------- */
+  .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:35;
+       width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+       box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
+  .fab svg{width:24px;height:24px}
+  .fab:active{transform:scale(.94)}
+  .hero{cursor:pointer}
+  .dep{cursor:pointer}
+  .dep:active, .hero:active{opacity:.85}
+
+  /* stops list in the route sheet */
+  .stops{list-style:none;margin:6px 0 0;padding:0;position:relative}
+  .stops li{position:relative;padding:7px 0 7px 26px;font-size:.9rem}
+  .stops li::before{content:"";position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--line)}
+  .stops li:first-child::before{top:50%}
+  .stops li:last-child::before{bottom:50%}
+  .stops li::after{content:"";position:absolute;left:3.5px;top:14px;width:9px;height:9px;border-radius:50%;background:var(--muted);border:2px solid var(--card)}
+  .stops li.origin::after{background:var(--el)}
+  .stops li.target::after{background:var(--ok)}
+  .stops li.dest::after{background:var(--el)}
+  .stops li small{display:block;font-size:.72rem;color:var(--muted);margin-top:1px}
+  .stops li.prev{color:var(--muted)}
+  .stops li b{font-weight:700}
+  .route-where{font-size:.85rem;color:var(--muted);margin-top:2px}
+  .route-where b{color:var(--ink)}
 
   /* pull-to-refresh indicator, parked where the old header buttons used to sit */
   .pull-ind{width:44px;height:44px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;color:var(--el);
@@ -295,12 +310,12 @@
         <span class="st" id="stripTo">Hayes</span>
       </div>
       <div class="seg-grid">
-        <button class="seg" data-dir="to-hayes" aria-pressed="true">
-          <span class="txt-wrap"><small>I am at Tottenham Court Road</small><b>Train to Hayes &amp; Harlington</b></span>
+        <button class="seg" data-dir="to-work" aria-pressed="true">
+          <span class="txt-wrap"><small>…</small><b>…</b></span>
           <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
         </button>
-        <button class="seg" data-dir="to-tcr" aria-pressed="false">
-          <span class="txt-wrap"><small>I am at Hayes &amp; Harlington</small><b>Train to Tottenham Court Road</b></span>
+        <button class="seg" data-dir="to-home" aria-pressed="false">
+          <span class="txt-wrap"><small>…</small><b>…</b></span>
           <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
         </button>
       </div>
@@ -343,22 +358,44 @@
   <p class="sr-only" role="status" aria-live="polite" id="announce"></p>
 </div>
 
-  <nav class="dock" aria-label="Quick actions">
-    <div class="dock-in">
-      <button class="dock-btn" id="btnRefresh" aria-label="Refresh departures">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg><span>Refresh</span>
-      </button>
-      <button class="dock-btn" id="btnSettings" aria-label="Open settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span>
-      </button>
-    </div>
-  </nav>
+  <button class="fab" id="btnSettings" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
+</button>
 
 <div id="scrim" class="scrim" hidden></div>
+<div id="scrim2" class="scrim" hidden></div>
+<div id="scrim3" class="scrim" hidden></div>
+<aside id="setupSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <h2 id="setupTitle">Your two stations</h2>
+  <p class="lede">Pick the station where you live and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
+  <h3>Where you live</h3>
+  <select class="txt" id="setupHome"></select>
+  <h3>Where you work</h3>
+  <select class="txt" id="setupWork"></select>
+  <p class="fine" id="setupNote" hidden>Both picks need to be different stations.</p>
+  <div class="row" style="margin-top:16px">
+    <button class="btn" id="setupLater">Set it up later</button>
+    <button class="btn primary" id="setupDone">Done</button>
+  </div>
+</aside>
+<aside id="routeSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="routeTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div id="routeBody"></div>
+</aside>
 <aside id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="grab" aria-hidden="true"></div>
   <h2 id="sheetTitle">Settings</h2>
   <p class="lede">Saved on this phone only. Nothing is uploaded anywhere.</p>
+
+  <h3>Your stations</h3>
+  <div class="stack">
+    <label class="fine" for="optHome">Where you live</label>
+    <select class="txt" id="optHome"></select>
+    <label class="fine" for="optWork">Where you work</label>
+    <select class="txt" id="optWork"></select>
+    <p class="fine">The board shows the next train to your work station while you are at home, and the journey home the other way round. Changing either re-aims the whole board.</p>
+  </div>
 
   <h3>Alerts</h3>
   <div class="field">
@@ -430,16 +467,19 @@ const API = "https://api.tfl.gov.uk";
 const LINE = "elizabeth";
 const NS = "elz.v1.";
 
-const STATIONS = {
-  tcr:   { label:"Tottenham Court Road", short:"Tottenham Court Road", abbr:"TCR",
-           match:/tottenham\s*court/i, fallback:["910GTOTCTRD","TCTFCRYRD","910GTOTCRD"] },
-  hayes: { label:"Hayes & Harlington",  short:"Hayes & Harlington",  abbr:"Hayes",
-           match:/hayes.*harlington|harlington.*hayes/i, fallback:["910GHAYESAH","HAYES&HL"] },
+/* The two stations are yours, not ours: settings.home and settings.work
+   hold the Naptan ids you pick (the first run asks).  STATIONS and ROUTES
+   are rebuilt from them, so everything downstream just asks "who is home,
+   who is work". */
+let STATIONS = {
+  home: { label:"\u2026", abbr:"\u2026" },
+  work: { label:"\u2026", abbr:"\u2026" },
 };
-const ROUTES = {
-  "to-hayes": { from:"tcr",   to:"hayes", title:"Next train to Hayes & Harlington" },
-  "to-tcr":   { from:"hayes", to:"tcr",   title:"Next train to Tottenham Court Road" },
+let ROUTES = {
+  "to-work": { from:"home", to:"work", title:"Next train" },
+  "to-home": { from:"work", to:"home", title:"Next train home" },
 };
+let DIRECTION_HINT = { "to-work":"outbound", "to-home":"inbound" };   // recomputed once the pair is known
 
 /* ---------- tiny helpers ---------- */
 const $ = (id) => document.getElementById(id);
@@ -468,7 +508,7 @@ class ApiError extends Error{
 
 /* ---------- settings ---------- */
 const defaults = { theme:"auto", auto:true, showAll:false, alerts:false, alertMins:2, demo:false, geoOn:true,
-                   apiKey:"", refreshMs:20000 };
+                   apiKey:"", refreshMs:20000, home:"", work:"" };
 const savedSettings = store.get("settings", {});
 let settings = Object.assign({}, defaults, savedSettings);
 if(!settings.apiKey && savedSettings.appKey) settings.apiKey = savedSettings.appKey;  // the old two-field layout
@@ -476,9 +516,10 @@ function saveSettings(){ store.set("settings", settings); }
 
 /* ---------- app state ---------- */
 const state = {
-  route: store.get("route", "to-hayes"),
+  route: store.get("route", "to-work"),
   nodes:null, names:null,           // line graph: id -> [next ids], id -> name
   coords:store.get("coords", {}),   // naptan id -> [lat, lon], remembered from TfL's own route data
+  seqIn:null, seqOut:null,          // ordered stop ids along each direction (for the direction hint)
   graphAt:0,
   ids:{},                           // {tcr:'910G…', hayes:'910G…'}
   arrivals:[], status:null,
@@ -486,7 +527,9 @@ const state = {
   timer:null, tickTimer:null, nextRefreshAt:0,
   alertedFor:null, lastAnnounce:-1, stale:false,
 };
-if(!ROUTES[state.route]) state.route = "to-hayes";
+const MIGRATE_ROUTE = { "to-hayes":"to-work", "to-tcr":"to-home" };
+if(MIGRATE_ROUTE[state.route]) state.route = MIGRATE_ROUTE[state.route];
+if(!ROUTES[state.route]) state.route = "to-work";
 const otherKey = () => ROUTES[state.route].to;
 const originKey = () => ROUTES[state.route].from;
 
@@ -544,11 +587,11 @@ function stationCoords(){
 
 function nearestStation(){
   const c = stationCoords();
-  if(!geo.pos || !c.tcr || !c.hayes) return null;
-  const d = { tcr:haversine(geo.pos, c.tcr), hayes:haversine(geo.pos, c.hayes) };
-  const key = d.tcr <= d.hayes ? "tcr" : "hayes";
-  const other = key === "tcr" ? "hayes" : "tcr";
-  return { key, other, metres:d[key], otherMetres:d[other], route: key === "tcr" ? "to-hayes" : "to-tcr" };
+  if(!geo.pos || !c.home || !c.work) return null;
+  const d = { home:haversine(geo.pos, c.home), work:haversine(geo.pos, c.work) };
+  const key = d.home <= d.work ? "home" : "work";
+  const other = key === "home" ? "work" : "home";
+  return { key, other, metres:d[key], otherMetres:d[other], route: key === "home" ? "to-work" : "to-home" };
 }
 
 function geoErrorState(e){
@@ -759,6 +802,8 @@ async function loadGraph(force){
       const seq = await getJSON(`/Line/${LINE}/Route/Sequence/${dir}`);
       (seq.stopPointSequences||[]).forEach(sp => {
         const pts = sp.stopPoint||[];
+        const field = dir === "inbound" ? "seqIn" : "seqOut";
+        if(!state[field] || pts.length > state[field].length) state[field] = pts.map(x => x.id);
         pts.forEach(p => {
           if(p.id && p.name) names[p.id] = p.name;
           if(p.id && isFinite(p.lat) && isFinite(p.lon)) coords[p.id] = [Number(p.lat), Number(p.lon)];
@@ -815,24 +860,75 @@ function idForName(name){
   return keys.find(id => state.names[id] && cleanDest(state.names[id]).toLowerCase().replace(/[^a-z0-9]/g,"") === loose) || null;
 }
 
-/* Which TfL stop point should we ask about for each station? */
-function resolveIds(){
-  for(const [key, def] of Object.entries(STATIONS)){
-    const cached = store.get("id."+key, null);
-    const cachedGood = cached && state.names && def.match.test(state.names[cached] || "");
-    if(cachedGood){ state.ids[key] = cached; continue; }
-    let picked = null;
-    if(state.names){
-      picked = Object.keys(state.names).find(id => def.match.test(state.names[id] || "")) || null;
-    }
-    if(!picked){
-      // fall back to any ids recorded for this browser, then the known ones
-      picked = store.get("id."+key, null) || def.fallback[0];
-    }
-    state.ids[key] = picked;
-    store.set("id."+key, picked);
+/* The pair of stations, and how labels and direction hints follow from it. */
+const DEFAULT_MATCH = {
+  home: { re:/tottenham\s*court/i },
+  work: { re:/hayes.*harlington|harlington.*hayes/i },
+};
+function shortAbbr(name){
+  const w = String(name||"").replace(/\s+Rail Station$/i,"").trim().split(/\s+/);
+  return (w[0] || "\u2026").slice(0, 10);
+}
+function rebuildFromPair(){
+  for(const key of ["home","work"]){
+    const id = state.ids[key];
+    const name = id && state.names ? state.names[id] : null;
+    STATIONS[key].label = name ? cleanDest(name) : "\u2026";
+    STATIONS[key].abbr = name ? shortAbbr(name) : "\u2026";
+  }
+  ROUTES["to-work"].title = "Next train to " + STATIONS.work.label;
+  ROUTES["to-home"].title = "Next train to " + STATIONS.home.label;
+  const seq = state.seqOut || state.seqIn;
+  if(seq && state.ids.home && state.ids.work && seq.includes(state.ids.home) && seq.includes(state.ids.work)){
+    const outboundToWork = seq.indexOf(state.ids.work) > seq.indexOf(state.ids.home);
+    DIRECTION_HINT["to-work"] = outboundToWork ? "outbound" : "inbound";
+    DIRECTION_HINT["to-home"] = outboundToWork ? "inbound" : "outbound";
   }
 }
+function applyStationPair(homeId, workId, opts){
+  opts = opts || {};
+  if(!state.names || !state.names[homeId] || !state.names[workId] || homeId === workId) return false;
+  const changed = state.ids.home !== homeId || state.ids.work !== workId;
+  state.ids = { home:homeId, work:workId };
+  if(opts.persist !== false){ settings.home = homeId; settings.work = workId; saveSettings(); }
+  rebuildFromPair();
+  if(!ROUTES[state.route]) state.route = "to-work";
+  renderJourney(); renderGeo();
+  if(changed && opts.refetch !== false) refresh(true);
+  return true;
+}
+function findByName(re){ return state.names ? Object.keys(state.names).find(id => re.test(state.names[id]||"")) || null : null; }
+/* No pair saved yet (first run, or never finished the setup): run the
+   board on the classic pair and ask the user to confirm. */
+function applyPairIfNeeded(){
+  if(!state.names) return;
+  const valid = id => id && state.names[id];
+  if(valid(settings.home) && valid(settings.work) && settings.home !== settings.work){
+    if(state.ids.home !== settings.home || state.ids.work !== settings.work)
+      applyStationPair(settings.home, settings.work, { refetch:false });
+    return;
+  }
+  const h = findByName(DEFAULT_MATCH.home.re);
+  const w = findByName(DEFAULT_MATCH.work.re);
+  if(h && w && h !== w){
+    // no saved pair: run the classic pair (if we are not mid-preview) and keep
+    // asking until the user picks their own
+    if(!(valid(state.ids.home) && valid(state.ids.work) && state.ids.home !== state.ids.work))
+      applyStationPair(h, w, { persist:false, refetch:false });
+    maybeOpenSetup();
+  }
+}
+let setupOpened = false;
+function maybeOpenSetup(){
+  if(setupOpened) return;
+  setupOpened = true;
+  fillStationSelects($("setupHome"), state.ids.home);
+  fillStationSelects($("setupWork"), state.ids.work);
+  setupPreview();
+  $("setupSheet").hidden = false; $("scrim2").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closeSetup(){ $("setupSheet").hidden = true; $("scrim2").hidden = true; document.body.style.overflow = ""; }
 
 /* ============================================================
    Departures
@@ -864,10 +960,6 @@ async function loadStatus(){
   }catch(e){ state.status = null; }
 }
 
-/* TfL's own direction tag, used only as a fallback when the route graph
-   cannot place a destination: westbound out of Tottenham Court Road is
-   "outbound", eastbound out of Hayes & Harlington is "inbound". */
-const DIRECTION_HINT = { "to-hayes":"outbound", "to-tcr":"inbound" };
 function assess(a){
   const targetId = state.ids[otherKey()], originId = state.ids[originKey()];
   const guess = { verdict: a.direction === DIRECTION_HINT[state.route] ? "dir" : "no", stopsToTarget:null, path:null };
@@ -905,6 +997,7 @@ function decorate(list){
       destination:cleanDest(a.destinationName) || "—",
       platform:cleanPlat(a.platformName),
       destinationNaptanId:a.destinationNaptanId || "",
+      currentLocation:a.currentLocation || "",
       verdict:verdict.verdict, stopsToTarget:verdict.stopsToTarget, path:verdict.path,
     });
   }
@@ -918,7 +1011,7 @@ function decorate(list){
 function sampleArrivals(){
   const originId = state.ids[originKey()], targetId = state.ids[otherKey()];
   const base = Date.now() + state.serverSkew;
-  const dirOf = state.route === "to-hayes" ? "outbound" : "inbound";
+  const dirOf = DIRECTION_HINT["to-work"] || "outbound";
   const mk = (id, name, mins, plat, dir) => ({
     lineId:LINE, naptanId:originId, destinationNaptanId:id, destinationName:name, direction:dir||dirOf,
     platformName:plat, expectedArrival:new Date(base + mins*60000).toISOString(),
@@ -939,12 +1032,12 @@ function sampleArrivals(){
   const pick = (arr, n) => arr.sort((a,b) => a.len - b.len).slice(0, n);
   const g = pick(good, 4), b = pick(bad, 2);
   const out = [];
-  const plats = state.route === "to-hayes" ? ["B","B","B","B"] : ["4","4","4","4"];
+  const plats = state.route === "to-work" ? ["B","B","B","B"] : ["4","4","4","4"];
   const step = [2, 6, 11, 17];
   g.forEach((d, i) => out.push(mk(d.id, d.name, step[i] ?? (18+i*3), plats[i] || "1")));
   b.forEach((d, i) => out.push(mk(d.id, d.name, [4, 9][i] ?? 14, "2", dirOf === "outbound" ? "inbound" : "outbound")));
   if(!out.length){
-    const fallback = state.route === "to-hayes"
+    const fallback = state.route === "to-work"
       ? [["910GRDNGSTN","Reading Rail Station",3,"B"],["910GHTRWTM4","Heathrow Terminal 4 Rail Station",7,"B"],
          ["910GMDNHEAD","Maidenhead Rail Station",13,"B"],["910GHTRWTM5","Heathrow Terminal 5 Rail Station",19,"B"],
          ["910GSHENFLD","Shenfield Rail Station",5,"A"],["910GABWDXR","Abbey Wood",11,"A"]]
@@ -978,10 +1071,17 @@ function minsLabel(m){
 function renderJourney(){
   const r = ROUTES[state.route];
   const from = STATIONS[r.from], to = STATIONS[r.to];
-  document.querySelectorAll(".seg").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.dir === state.route)));
+  document.querySelectorAll(".seg").forEach(b => {
+    b.setAttribute("aria-pressed", String(b.dataset.dir === state.route));
+    const atHome = b.dataset.dir === "to-work";
+    const fromKey = atHome ? "home" : "work";
+    const toKey   = atHome ? "work" : "home";
+    b.querySelector("small").textContent = "I am at " + STATIONS[fromKey].label;
+    b.querySelector("b").textContent = "Train to " + STATIONS[toKey].label;
+  });
   $("stripFrom").textContent = from.abbr;
   $("stripTo").textContent = to.abbr;
-  $("routeStrip").classList.toggle("rev", state.route === "to-tcr");
+  $("routeStrip").classList.toggle("rev", state.route === "to-home");
   $("heroKicker").textContent = r.title;
   document.title = `Oli Commuter · next train to ${to.label}`;
 
@@ -1276,11 +1376,10 @@ function maybeAlert(next){
 async function refresh(manual){
   if(state.loading) return;
   state.loading = true;
-  $("btnRefresh").classList.add("spin");
   try{
     if(!state.nodes || !state.ids[originKey()] || !state.ids[otherKey()]){
       await loadGraph(false);
-      resolveIds();
+      applyPairIfNeeded();
       renderJourney();
     }
     const tasks = [loadArrivals()];
@@ -1301,7 +1400,7 @@ async function refresh(manual){
       store.del("id."+originKey()); store.del("graph");
       state.ids = {}; state.nodes = null;
       try{
-        await loadGraph(true); resolveIds(); await loadArrivals();
+        await loadGraph(true); applyPairIfNeeded(); await loadArrivals();
         state.error = null;
       }catch(e2){ state.error = e2; }
     }
@@ -1309,7 +1408,6 @@ async function refresh(manual){
     if(state.arrivals.length) state.stale = true;
   }finally{
     state.loading = false;
-    $("btnRefresh").classList.remove("spin");
     state.nextRefreshAt = settings.auto ? Date.now() + settings.refreshMs : 0;
     if(settings.demo){ state.arrivals = sampleArrivals(); state.fetchedAt = Date.now(); }
     renderAll();
@@ -1324,7 +1422,7 @@ async function refresh(manual){
   // empty list but station resolved: the id may be a parent id with no predictions
   if(!state.error && state.arrivals.length === 0 && !settings.demo){
     const key = originKey(), cached = store.get("id."+key, null);
-    const alt = STATIONS[key].fallback.find(f => f !== cached);
+    const alt = (STATIONS[key].fallback||[]).find(f => f !== cached);
     if(alt && !store.get("triedAlt."+key, false)){
       store.set("triedAlt."+key, true); store.set("id."+key, alt); state.ids[key] = alt;
       state.arrivals = []; await refresh();
@@ -1409,6 +1507,105 @@ document.addEventListener("touchend",   pullEnd,  { passive: true });
 document.addEventListener("touchcancel",pullEnd,  { passive: true });
 
 /* ============================================================
+   Your two stations
+   ============================================================ */
+function fillStationSelects(el, selectedId){
+  if(!el || !state.names) return;
+  const ids = Object.keys(state.names).sort((a,b) => cleanDest(state.names[a]).localeCompare(cleanDest(state.names[b])));
+  el.innerHTML = ids.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("");
+  if(selectedId && state.names[selectedId]) el.value = selectedId;
+}
+function setupPreview(){
+  const h = $("setupHome").value, w = $("setupWork").value;
+  const ok = h && w && h !== w;
+  $("setupNote").hidden = ok;
+  $("setupDone").disabled = !ok;
+  if(ok && (state.ids.home !== h || state.ids.work !== w)) applyStationPair(h, w, { persist:false, refetch:true });
+  return ok;
+}
+$("setupHome").addEventListener("change", setupPreview);
+$("setupWork").addEventListener("change", setupPreview);
+$("setupDone").addEventListener("click", () => {
+  if(!setupPreview()) return;
+  applyStationPair($("setupHome").value, $("setupWork").value, { persist:true, refetch:false });
+  setupOpened = true;
+  closeSetup();
+});
+$("setupLater").addEventListener("click", () => { setupOpened = true; closeSetup(); });
+$("scrim2").addEventListener("click", () => { setupOpened = true; closeSetup(); });
+$("optHome").addEventListener("change", () => {
+  const h = $("optHome").value, w = $("optWork").value;
+  if(h && w && h !== w) applyStationPair(h, w, { persist:true });
+});
+$("optWork").addEventListener("change", () => {
+  const h = $("optHome").value, w = $("optWork").value;
+  if(h && w && h !== w) applyStationPair(h, w, { persist:true });
+});
+
+/* ============================================================
+   Tap a train: the route it runs along
+   ============================================================ */
+function prevStopOf(originId, path){
+  if(!originId || !state.nodes || !path) return null;
+  const nextId = path.length > 1 ? path[1] : null;
+  const others = (state.nodes[originId]||[]).filter(n => n !== nextId);
+  return others.length === 1 ? others[0] : null;   // terminus or ambiguous: say nothing
+}
+function openRouteSheet(d){
+  const originId = state.ids[originKey()];
+  const targetId = state.ids[otherKey()];
+  const path = d.path || (originId && d.destinationNaptanId ? pathBetween(originId, d.destinationNaptanId) : null);
+  const clock = new Date(d.eta - state.serverSkew);
+  const nameOf = id => cleanDest(state.names[id]||id);
+  let where = "";
+  if(d.currentLocation && state.names[d.currentLocation]){
+    where = `Now at <b>${esc(nameOf(d.currentLocation))}</b>`;
+  } else if(path){
+    const prevId = prevStopOf(originId, path);
+    if(prevId) where = `Coming from <b>${esc(nameOf(prevId))}</b>`;
+    else where = `Starting from <b>${esc(nameOf(originId))}</b>`;
+  }
+  let listHtml;
+  if(path && path.length > 1){
+    const originHere = originId === state.ids.home;
+    const rows = [];
+    const prevId = prevStopOf(originId, path);
+    if(prevId) rows.push(`<li class="prev">${esc(nameOf(prevId))}<small>coming from</small></li>`);
+    rows.push(`<li class="origin"><b>${esc(nameOf(originId))}</b><small>${originHere ? "you are here" : "your station"}</small></li>`);
+    path.slice(1,-1).forEach(id => {
+      if(id === targetId) rows.push(`<li class="target"><b>${esc(nameOf(id))}</b><small>${STATIONS[otherKey()].label === nameOf(id) ? "your other station" : ""}</small></li>`);
+      else rows.push(`<li>${esc(nameOf(id))}</li>`);
+    });
+    const last = path[path.length-1];
+    rows.push(`<li class="dest"><b>${esc(nameOf(last))}</b><small>where it is going</small></li>`);
+    listHtml = `<ol class="stops">${rows.join("")}</ol>
+      <p class="fine" style="margin-top:10px">TfL publishes this train\u2019s destination, not its full stop pattern, so this is the route it runs along — a semi-direct stops at a subset of these stations.</p>`;
+  } else {
+    listHtml = `<p class="fine">TfL does not place this train\u2019s destination on the Elizabeth line data, so its route cannot be shown.</p>`;
+  }
+  $("routeBody").innerHTML = `
+    <h2 id="routeTitle">${esc(d.destination)} · ${fmtClock(clock)}</h2>
+    <p class="route-where">${d.platform?`Platform ${esc(d.platform)} · `:""}${where}</p>
+    ${listHtml}`;
+  $("routeSheet").hidden = false; $("scrim3").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closeRouteSheet(){ $("routeSheet").hidden = true; $("scrim3").hidden = true; document.body.style.overflow = ""; }
+$("scrim3").addEventListener("click", closeRouteSheet);
+$("hero").addEventListener("click", e => {
+  if(e.target.closest("button") || e.target.closest("details") || e.target.closest("a")) return;
+  const id = $("hero").dataset.depId;
+  const d = decorate(state.arrivals).find(x => x.id === id);
+  if(d) openRouteSheet(d);
+});
+$("depList").addEventListener("click", e => {
+  const row = e.target.closest(".dep");
+  if(!row || !row.dataset.id) return;
+  const d = decorate(state.arrivals).find(x => x.id === row.dataset.id);
+  if(d) openRouteSheet(d);
+});
+
+/* ============================================================
    Wiring
    ============================================================ */
 settings.refreshMs = clamp(Number(settings.refreshMs)||20000, 10000, 300000);
@@ -1444,7 +1641,6 @@ $("geoLine").addEventListener("click", () => {
   $("geoText").textContent = "Checking where you are…";
   startGeoWatch(); pollGeoOnce();
 });
-$("btnRefresh").addEventListener("click", () => refresh(true));
 $("btnPause").addEventListener("click", (e) => {
   settings.auto = !settings.auto; saveSettings();
   e.currentTarget.textContent = settings.auto ? "Pause updates" : "Resume updates";
@@ -1487,6 +1683,8 @@ function syncSheet(){
   $("optDemo").checked = !!settings.demo;
   $("optGeo").checked = !!settings.geoOn;
   $("geoState").textContent = geoStatusLine();
+  fillStationSelects($("optHome"), state.ids.home);
+  fillStationSelects($("optWork"), state.ids.work);
   $("optApiKey").value = settings.apiKey || "";
   const st = $("keyState");
   if(state.needsKeys) st.textContent = "TfL is asking for a key. Register free at api-portal.tfl.gov.uk and paste it below.";
@@ -1541,8 +1739,8 @@ $("btnReset").addEventListener("click", () => {
   saveSettings(); closeSheet(); location.reload();
 });
 
-/* deep link: #to-tcr / #to-hayes */
-const hash = (location.hash||"").replace("#","");
+/* deep link: #to-work / #to-home (old #to-hayes / #to-tcr links migrate) */
+const hash = MIGRATE_ROUTE[(location.hash||"").replace("#","")] || (location.hash||"").replace("#","");
 if(ROUTES[hash]) state.route = hash;
 
 applyTheme();

@@ -1,14 +1,15 @@
 # Oli Commuter
 
-An Elizabeth line departures board for the one journey that matters: **Tottenham Court Road
-⇄ Hayes & Harlington**. Live times from Transport for London, no account, no tracking, and —
-in the Android app — it opens on the right end of the platform because it knows which station
-you are standing at.
+An Elizabeth line departures board for the journey that matters — the one between **the two
+stations you pick**: where you live and where you work. Live times from Transport for London,
+no account, no tracking, and — in the Android app — it opens on the right end of the platform
+because it knows which station you are standing at.
 
-| Opened on the platform at Hayes & Harlington | It explains itself in Settings |
+| Opened on the platform at Hayes & Harlington | First run: it asks which two stations are yours |
 |---|---|
-| ![The board, opened at Hayes & Harlington](docs/screenshots/at-hayes.png) | ![Pulling down to refresh](docs/screenshots/pulling.png) |
-| ![Dark appearance](docs/screenshots/dark.png) | ![Settings, with the location section open](docs/screenshots/settings.png) |
+| ![The board, opened at Hayes & Harlington](docs/screenshots/at-hayes.png) | ![The setup sheet with home and work station](docs/screenshots/setup.png) |
+| ![Pulling down to refresh](docs/screenshots/pulling.png) | ![Tap a train to see the stops it serves](docs/screenshots/train.png) |
+| ![Dark appearance](docs/screenshots/dark.png) | ![Settings, with the two-station section open](docs/screenshots/settings.png) |
 
 ## Install
 
@@ -16,8 +17,10 @@ Grab the newest `Oli-Commuter-debug.apk` from [Releases](../../releases) and put
 phone (cable, Files, email — whatever you already use). Tap it, allow *install from this app*
 once when Android complains, tap it again. Android 7.0 or newer.
 
-On first launch it asks for location: **While using the app**. Nothing else is needed — no
-account, nothing running in the background.
+On first launch it asks two things: **which two stations are yours** (where you live and where
+you travel to — it guesses the classic pair, you confirm or change in two taps), and
+**location** (**While using the app**) so it knows which of the two you are standing at.
+Nothing else is needed — no account, nothing running in the background.
 
 It is a debug-signed build, which is the honest way to put your own app on your own phone.
 If a previous "Next Elizabeth line" build is installed, uninstall it first: from 1.0.0 the app
@@ -25,8 +28,16 @@ id is `com.localtools.olicommuter`.
 
 ## What it does
 
+- **Your two stations.** First run asks where you live and where you work; after that the whole
+  board faces the right way — next train to work when you are at home, the journey home when you
+  are not. Either one can be changed in Settings at any time, and every station on the line is a
+  valid pick, not just the two this app shipped with.
 - **The next train, unmissably big** — countdown, minutes, platform, destination, and whether
   it actually calls at the other station.
+- **Tap any train to see its route.** A train you can tap — the big one or any row in the list —
+  opens its path: where it is now, where it came from, every stop between you and the
+  destination, and your stations marked. TfL publishes the destination but not each train's full
+  stop pattern, so the sheet says exactly that when a semi-direct stops at a subset of the route.
 - **"Does it really stop there?"** answered properly. The app builds the line's stop graph from
   TfL's own route data and checks the path, rather than squinting at a destination name. A train
   going the right way with no confirmation of a call says exactly that, never "stops here".
@@ -37,15 +48,15 @@ id is `com.localtools.olicommuter`.
   live if the signal drops.
 - **Alerts** vibrate — and notify, if you allow it — when the next train is within your warning
   time.
-- **One-handed by design.** Refresh and Settings sit in a bottom bar where your thumb
-  already is; the top bar is just the title. Light, dark or match-the-system appearance is
-  a setting in Settings, not a button to hunt for.
+- **One-handed by design.** One button on screen, where your thumb already is: Settings.
+  Refreshing is a gesture, not a button. Light, dark or match-the-system appearance is a setting
+  in Settings, not a button to hunt for.
 - **Pull to refresh.** Grab the board at the top and drag down, like every other app on
   your phone.
 
 ## What the location is used for
 
-One decision: which of the two stations you are standing at, so the direction sets itself.
+One decision: which of *your* two stations you are standing at, so the direction sets itself.
 
 - Only while the app is on screen. The watch stops the moment you leave it: no background
   service, no geofence, nothing listening.
@@ -81,7 +92,7 @@ Android project, then `./gradlew assembleDebug`.
 1. Put the new version in `package.json` and in `versionName` (and `versionCode`, one step up)
    in `android/app/build.gradle`, and add an entry to [`CHANGELOG.md`](CHANGELOG.md).
 2. `./build.sh`, install it on the phone, check it.
-3. `git commit -am "1.2.3: what changed" && git tag v1.2.3 && git push origin main --follow-tags`.
+3. `git commit -am "1.3.0: what changed" && git tag v1.3.0 && git push origin main --follow-tags`.
 
 Pushing a `v*` tag runs [the APK workflow](.github/workflows/android.yml), which builds the
 debug APK and attaches it to the release. If you add `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD` and
