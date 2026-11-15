@@ -3,6 +3,13 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are `v1.2.3`.
 
+## 1.1.2 — 2026-11-15
+
+- Settings now take a single **API key** (the primary key from your
+  subscription at api-portal.tfl.gov.uk). TfL's new portal does not
+  use app_id any more, so the two-field layout and its error copy are
+  gone; old saved keys are carried over
+
 ## 1.1.1 — 2026-11-15
 
 - Registration link in Settings now points at TfL's current portal

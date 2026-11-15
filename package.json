@@ -1,6 +1,6 @@
 {
   "name": "oli-commuter",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Elizabeth line departures board for Tottenham Court Road and Hayes & Harlington, as an Android app that knows which station you are standing at.",
   "scripts": {
     "build": "bash build.sh",

@@ -397,15 +397,13 @@
   <h3>TfL data</h3>
   <div class="stack">
     <p class="fine" id="keyState">Checking whether live data works without a key…</p>
-    <label class="fine" for="optAppId">app_id</label>
-    <input class="txt" id="optAppId" type="text" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
-    <label class="fine" for="optAppKey">app_key</label>
-    <input class="txt" id="optAppKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
+    <label class="fine" for="optApiKey">API key</label>
+    <input class="txt" id="optApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
     <div class="row">
       <button class="btn primary" id="btnSaveKeys">Save key</button>
       <button class="btn" id="btnTestData">Test</button>
     </div>
-    <p class="fine">Free registration at <a href="https://api-portal.tfl.gov.uk/" target="_blank" rel="noopener">api-portal.tfl.gov.uk</a>. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
+    <p class="fine">Free at <a href="https://api-portal.tfl.gov.uk/" target="_blank" rel="noopener">api-portal.tfl.gov.uk</a> — your subscription's <b>primary key</b>. The key stays on this phone; TfL sees it only as the "app_key" on each request. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
   </div>
 
   <h3>If you want a look with no signal</h3>
@@ -470,8 +468,10 @@ class ApiError extends Error{
 
 /* ---------- settings ---------- */
 const defaults = { theme:"auto", auto:true, showAll:false, alerts:false, alertMins:2, demo:false, geoOn:true,
-                   appId:"", appKey:"", refreshMs:20000 };
-let settings = Object.assign({}, defaults, store.get("settings", {}));
+                   apiKey:"", refreshMs:20000 };
+const savedSettings = store.get("settings", {});
+let settings = Object.assign({}, defaults, savedSettings);
+if(!settings.apiKey && savedSettings.appKey) settings.apiKey = savedSettings.appKey;  // the old two-field layout
 function saveSettings(){ store.set("settings", settings); }
 
 /* ---------- app state ---------- */
@@ -718,8 +718,7 @@ async function getJSON(path, params, opts){
   opts = opts || {};
   const url = new URL(API + path);
   Object.entries(params||{}).forEach(([k,v]) => url.searchParams.set(k, v));
-  if(settings.appId) url.searchParams.set("app_id", settings.appId);
-  if(settings.appKey) url.searchParams.set("app_key", settings.appKey);
+  if(settings.apiKey) url.searchParams.set("app_key", settings.apiKey);
 
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), opts.timeout || 15000);
@@ -731,7 +730,7 @@ async function getJSON(path, params, opts){
   }finally{ clearTimeout(to); }
 
   if(res.status===401 || res.status===403){
-    throw new ApiError("keys", res.status, "TfL wants an app_id and app_key for this.");
+    throw new ApiError("keys", res.status, "TfL wants an API key for this.");
   }
   if(!res.ok){
     let msg = "";
@@ -1017,7 +1016,7 @@ function renderHero(){
     body.innerHTML = `
       <div class="to">${keys ? "TfL wants a free API key" : offline ? "No signal to TfL" : "Could not read the live board"}</div>
       <div class="via">${keys
-          ? "TfL’s live boards need a free <b>app_id</b> and <b>app_key</b>. Register at api-portal.tfl.gov.uk, then paste them in Settings — they stay on this phone."
+          ? "TfL’s live boards need a free API key. Register at api-portal.tfl.gov.uk, then paste it in Settings — it stays on this phone."
           : offline
             ? "Turn off airplane mode or move somewhere with signal, then try again. Departures you saw earlier are kept on this phone."
             : esc(state.error.message || "Something went wrong talking to TfL.")}</div>
@@ -1488,12 +1487,11 @@ function syncSheet(){
   $("optDemo").checked = !!settings.demo;
   $("optGeo").checked = !!settings.geoOn;
   $("geoState").textContent = geoStatusLine();
-  $("optAppId").value = settings.appId || "";
-  $("optAppKey").value = settings.appKey || "";
+  $("optApiKey").value = settings.apiKey || "";
   const st = $("keyState");
   if(state.needsKeys) st.textContent = "TfL is asking for a key. Register free at api-portal.tfl.gov.uk and paste it below.";
-  else if(state.error && state.error.kind !== "keys") st.textContent = "Last try: " + state.error.message + " — keys are optional, but they help with rate limits.";
-  else st.textContent = settings.appId ? "Using your TfL key. Live data is working." : "Live data works without a key on this network. Add one only if TfL asks.";
+  else if(state.error && state.error.kind !== "keys") st.textContent = "Last try: " + state.error.message + " — the key is optional, but it lifts the rate limit.";
+  else st.textContent = settings.apiKey ? "Using your TfL key. Live data is working." : "Live data works without a key on this network. Add one only if TfL asks.";
 }
 $("optAlerts").addEventListener("change", e => {
   settings.alerts = e.target.checked;
@@ -1528,8 +1526,7 @@ $("optDemo").addEventListener("change", e => {
   renderAll();
 });
 $("btnSaveKeys").addEventListener("click", () => {
-  settings.appId = $("optAppId").value.trim();
-  settings.appKey = $("optAppKey").value.trim();
+  settings.apiKey = $("optApiKey").value.trim();
   saveSettings(); state.needsKeys = false; syncSheet(); closeSheet(); refresh(true);
 });
 $("btnTestData").addEventListener("click", async () => {
