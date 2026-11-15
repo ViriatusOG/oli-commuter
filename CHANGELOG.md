@@ -3,6 +3,14 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.3.1 — 2026-11-15
+
+- Fix: the direction hint (which way each journey runs) was only worked out
+  while the route data was being fetched, so on a later open of the app that
+  used the cached route it fell back to a guess. The stop order is now kept
+  with the cached route, so auto-picking your direction works every time,
+  even when the route feed is being served from cache or is briefly down.
+
 ## 1.3.0 — 2026-11-15
 
 - **In-app updates**: the app now checks the release feed while it is open
