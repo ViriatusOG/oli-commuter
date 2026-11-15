@@ -109,4 +109,4 @@ jobs:
           files: |
             build/*.apk
             build/*.sha256
-          bodyFile: release-notes.md
+          body_path: release-notes.md
