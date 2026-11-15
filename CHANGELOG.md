@@ -3,6 +3,13 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.1 — 2026-11-15
+
+- Fixed: the slim top countdown could sit on screen showing an old time while
+  the big card counted down to a different one — its hidden state was ignored,
+  so it never hid and never refreshed. It now only appears when the big card
+  is off screen, and always shows the same time
+
 ## 1.5.0 — 2026-11-15
 
 The UI/UX-review build: the app behaves like an Android app now.

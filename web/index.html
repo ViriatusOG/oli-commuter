@@ -259,6 +259,7 @@
   #miniBar{position:fixed;top:0;left:0;right:0;z-index:36;display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:calc(7px + env(safe-area-inset-top)) 18px 8px;background:color-mix(in srgb, var(--bg) 92%, transparent);
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem}
+  #miniBar[hidden]{display:none}
   #miniBar .mk{color:var(--muted);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #miniBar .mc{color:var(--el);font-weight:800;font-variant-numeric:tabular-nums;flex:0 0 auto}
   .sheet-done{flex:0 0 auto;margin:14px -16px 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));
