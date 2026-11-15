@@ -3,6 +3,15 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.3.0 — 2026-11-15
+
+- **In-app updates**: the app now checks the release feed while it is open
+  (at most every 12 hours), offers the new version as a banner, downloads it
+  with a progress bar and — after verifying the SHA-256 the release
+  published — hands it to Android's installer. No browser, no cable, and the
+  new version installs straight over the old one
+- Settings has an **Updates** section with a manual "check for updates"
+
 ## 1.2.0 — 2026-11-15
 
 - **Your two stations**: first run asks where you live and where you work; any pair on the

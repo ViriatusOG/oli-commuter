@@ -10,6 +10,7 @@ because it knows which station you are standing at.
 | ![The board, opened at Hayes & Harlington](docs/screenshots/at-hayes.png) | ![The setup sheet with home and work station](docs/screenshots/setup.png) |
 | ![Pulling down to refresh](docs/screenshots/pulling.png) | ![Tap a train to see the stops it serves](docs/screenshots/train.png) |
 | ![Dark appearance](docs/screenshots/dark.png) | ![Settings, with the two-station section open](docs/screenshots/settings.png) |
+| ![The update banner, offering a newer version](docs/screenshots/update.png) | |
 
 ## Install
 
@@ -21,6 +22,9 @@ On first launch it asks two things: **which two stations are yours** (where you 
 you travel to — it guesses the classic pair, you confirm or change in two taps), and
 **location** (**While using the app**) so it knows which of the two you are standing at.
 Nothing else is needed — no account, nothing running in the background.
+
+From 1.3.0 an installed app updates itself from within (see above), so you only
+need the first APK once.
 
 It is a debug-signed build, which is the honest way to put your own app on your own phone.
 If a previous "Next Elizabeth line" build is installed, uninstall it first: from 1.0.0 the app
@@ -34,6 +38,11 @@ id is `com.localtools.olicommuter`.
   valid pick, not just the two this app shipped with.
 - **The next train, unmissably big** — countdown, minutes, platform, destination, and whether
   it actually calls at the other station.
+- **Updates itself.** The app checks the release feed while it is open,
+  offers a new version as a banner, downloads it (progress included), verifies
+  the published SHA-256 and hands it to Android's installer. You can also
+  check by hand in Settings, and the old APK download still works if you ever
+  want it.
 - **Tap any train to see its route.** A train you can tap — the big one or any row in the list —
   opens its path: where it is now, where it came from, every stop between you and the
   destination, and your stations marked. TfL publishes the destination but not each train's full
@@ -106,6 +115,7 @@ that too.
 | `web/index.html` | the entire app. Everything interesting happens here. |
 | `capacitor.config.json` | app id, name, WebView settings. |
 | `android/` | the generated Android project: manifest, Gradle, launcher icons. |
+| `plugins/update/` | the small in-app update plugin: download, checksum, install intent. |
 | `android/app/src/main/AndroidManifest.xml` | where the two location permissions live. |
 | `build.sh`, `make-icons.py` | build the APK; draw the icons. |
 | `docs/screenshots/` | pictures for this page. |

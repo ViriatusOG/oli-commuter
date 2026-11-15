@@ -1,0 +1,24 @@
+{
+  "name": "oli-commuter-update",
+  "version": "1.0.0",
+  "description": "In-app update for Oli Commuter: check GitHub Releases, download the new APK with a checksum, and hand it to the Android installer.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "android/"
+  ],
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "update"
+  ],
+  "author": "ViriatusOG",
+  "license": "MIT",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  }
+}

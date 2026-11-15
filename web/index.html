@@ -116,6 +116,12 @@
   .banner[data-sev="bad"]{background:var(--bad-soft);color:var(--bad);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
   .banner[data-sev="warn"]{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
   .banner[data-sev="good"]{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb, currentColor 24%, transparent)}
+  .banner[data-sev="update"]{background:var(--el-soft);color:var(--ink);border:1px solid color-mix(in srgb, var(--el) 30%, transparent)}
+  .banner[data-sev="update"] b{color:var(--ink)}
+  .banner[data-sev="update"] span{color:var(--muted)}
+  .banner[data-sev="update"] svg{color:var(--el)}
+  .banner .act{flex:0 0 auto;margin-top:1px;min-height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--el);background:var(--el);color:#fff;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+  #updateBannerSlot{margin-top:8px}
   .banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
   .banner .why{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:inherit;opacity:.92;margin-top:3px;font-size:.8rem}
   .banner .close{margin-left:auto;background:none;border:0;padding:2px;opacity:.7;cursor:pointer}
@@ -301,6 +307,7 @@
   </header>
 
   <div id="bannerSlot"></div>
+  <div id="updateBannerSlot"></div>
 
   <main>
     <section class="card journey" id="journey" aria-label="Direction of travel">
@@ -395,6 +402,12 @@
     <label class="fine" for="optWork">Where you work</label>
     <select class="txt" id="optWork"></select>
     <p class="fine">The board shows the next train to your work station while you are at home, and the journey home the other way round. Changing either re-aims the whole board.</p>
+  </div>
+
+  <h3>Updates</h3>
+  <div class="stack">
+    <p class="fine" id="updateLine">The app looks for a new version once a day while it is open; this is a manual check. Updates install straight over the old app, no browser needed.</p>
+    <button class="btn" id="btnUpdate" style="margin-top:10px">Check for updates</button>
   </div>
 
   <h3>Alerts</h3>
@@ -526,6 +539,7 @@ const state = {
   fetchedAt:0, serverSkew:0, error:null, needsKeys:false,
   timer:null, tickTimer:null, nextRefreshAt:0,
   alertedFor:null, lastAnnounce:-1, stale:false,
+  update:null, updatePath:null, updateBusy:false, updateDismissed:false, updateCheckedAt:store.get("updateCheckedAt", 0),
 };
 const MIGRATE_ROUTE = { "to-hayes":"to-work", "to-tcr":"to-home" };
 if(MIGRATE_ROUTE[state.route]) state.route = MIGRATE_ROUTE[state.route];
@@ -1371,6 +1385,132 @@ function maybeAlert(next){
 }
 
 /* ============================================================
+   In-app updates
+   ============================================================ */
+function verCmp(a, b){
+  const pa = String(a).split(".").map(x => parseInt(x, 10) || 0);
+  const pb = String(b).split(".").map(x => parseInt(x, 10) || 0);
+  for(let i = 0; i < Math.max(pa.length, pb.length); i++){
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if(x !== y) return x > y ? 1 : -1;
+  }
+  return 0;
+}
+const UPDATE = {
+  api: "https://api.github.com/repos/ViriatusOG/oli-commuter/releases/latest",
+  staleMs: 12*60*60*1000,   // an open app re-checks at most every half a day
+  async installed(){
+    try{
+      const i = await window.Capacitor.Plugins.App.getInfo();
+      return { version: String(i.version || "0"), build: Number(i.build) || 0 };
+    }catch(e){ return null; }
+  },
+  async latest(){
+    const r = await fetch(this.api, { headers: { "User-Agent": "oli-commuter" } });
+    if(!r.ok) throw new ApiError("http", r.status, "Could not reach the release feed");
+    const j = await r.json();
+    const assets = j.assets || [];
+    const apk = assets.find(a => /\.apk$/i.test(a.name) && !/\.sha256$/i.test(a.name));
+    if(!apk) throw new ApiError("http", 0, "The newest release has no APK attached yet");
+    const sha = assets.find(a => /\.sha256$/i.test(a.name) && a.name === apk.name + ".sha256");
+    return { tag: j.tag_name || "", version: String(j.tag_name || "").replace(/^v/,""),
+             url: apk.browser_download_url, shaUrl: sha ? sha.browser_download_url : null, bytes: apk.size || 0 };
+  },
+  async sha256For(u){
+    if(!u.shaUrl) return null;
+    try{
+      const r = await fetch(u.shaUrl, { headers: { "User-Agent": "oli-commuter" } });
+      if(!r.ok) return null;
+      const m = (await r.text()).match(/[0-9a-fA-F]{64}/);
+      return m ? m[0].toLowerCase() : null;
+    }catch(e){ return null; }
+  },
+  async check(manual){
+    if(state.updateBusy) return;
+    const inst = await this.installed();
+    if(!inst){ state.update = null; renderUpdate(); return; }   // a plain web page updates by reloading
+    state.updateBusy = true;
+    if(manual) setUpdateLine("Checking the release feed…");
+    try{
+      const latest = await this.latest();
+      state.updateCheckedAt = Date.now(); store.set("updateCheckedAt", state.updateCheckedAt);
+      if(verCmp(latest.version, inst.version) > 0){
+        state.update = Object.assign(state.update || {}, { status:"available", version:latest.version,
+          url:latest.url, shaUrl:latest.shaUrl, bytes:latest.bytes, pct:0, error:"" });
+        if(manual) setUpdateLine(`Version ${latest.version} is available. Download it any time you like.`);
+      } else {
+        state.update = null; state.updatePath = null;
+        if(manual) setUpdateLine(`You are on the newest version (${inst.version}).`);
+      }
+    }catch(e){
+      if(manual) setUpdateLine("Could not check for updates: " + (e.message || "network problem") + ". The board itself is not affected.");
+    }finally{
+      state.updateBusy = false;
+      renderUpdate();
+    }
+  },
+  async download(){
+    const u = state.update;
+    if(!u || u.status === "downloading" || state.updateBusy) return;
+    state.updateBusy = true;
+    u.status = "downloading"; u.pct = 0; u.error = "";
+    setUpdateLine("Downloading…");
+    renderUpdate();
+    const P = window.Capacitor.Plugins.OliUpdater;
+    const sha = await this.sha256For(u);
+    let off = null;
+    try{
+      off = await P.addListener("progress", ev => { u.pct = ev.pct || 0; setUpdateLine("Downloading… " + Math.round(u.pct) + "%"); });
+      const res = await P.download({ url: u.url, sha256: sha || "" });
+      state.updatePath = res.path;
+      u.status = "ready"; u.pct = 100;
+      setUpdateLine(`Version ${u.version} is downloaded. Tap the button to install it.`);
+    }catch(e){
+      u.status = "available"; u.error = e.message || "The download failed";
+      setUpdateLine(u.error + " You can try again.");
+    }finally{
+      state.updateBusy = false;
+      if(off && off.remove){ try{ off.remove(); }catch(e){} }
+      renderUpdate();
+    }
+  },
+  async install(){
+    const u = state.update;
+    if(!u || u.status !== "ready" || !state.updatePath) return;
+    try{
+      await window.Capacitor.Plugins.OliUpdater.install({ path: state.updatePath });
+      setUpdateLine("If the installer did not appear, allow “install unknown apps” for this app and try again.");
+    }catch(e){
+      setUpdateLine("Could not start the installer: " + (e.message || "unknown problem"));
+    }
+  }
+};
+function setUpdateLine(t){ const el = $("updateLine"); if(el) el.textContent = t; }
+function renderUpdate(){
+  const u = state.update;
+  const btn = $("btnUpdate");
+  if(btn){
+    if(u && u.status === "downloading"){ btn.textContent = "Downloading " + Math.round(u.pct) + "%"; btn.disabled = true; }
+    else if(u && u.status === "ready"){ btn.textContent = "Install " + u.version; btn.disabled = false; }
+    else if(u && u.status === "available"){ btn.textContent = "Download " + u.version; btn.disabled = false; }
+    else { btn.textContent = "Check for updates"; btn.disabled = state.updateBusy; }
+  }
+  const slot = $("updateBannerSlot");
+  if(!slot) return;
+  if(!u || state.updateDismissed || u.status === "downloading" || (u.status !== "available" && u.status !== "ready")){
+    slot.innerHTML = ""; return;
+  }
+  const ready = u.status === "ready";
+  slot.innerHTML = `<div class="banner" data-sev="update" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      <div class="body"><b>Oli Commuter ${esc(u.version)} ${ready ? "is downloaded" : "is available"}</b>
+        <span>${ready ? "The old version keeps working until you install it." : "It installs straight over this one — nothing is lost."}</span></div>
+      <button class="act" id="bannerUpdate">${ready ? "Install" : "Update"}</button>
+    </div>`;
+  slot.querySelector("#bannerUpdate").addEventListener("click", () => ready ? UPDATE.install() : UPDATE.download());
+}
+
+/* ============================================================
    Refresh loop
    ============================================================ */
 async function refresh(manual){
@@ -1608,6 +1748,12 @@ $("depList").addEventListener("click", e => {
 /* ============================================================
    Wiring
    ============================================================ */
+$("btnUpdate").addEventListener("click", () => {
+  const u = state.update;
+  if(u && u.status === "ready") UPDATE.install();
+  else if(u && u.status === "available") UPDATE.download();
+  else UPDATE.check(true);
+});
 settings.refreshMs = clamp(Number(settings.refreshMs)||20000, 10000, 300000);
 
 function setRoute(route, refetch){
@@ -1756,6 +1902,7 @@ if(isNativeApp()){
 }
 
 if(settings.geoOn) { startGeoWatch(); pollGeoOnce(); }
+if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
 </script>
 </body>
 </html>
