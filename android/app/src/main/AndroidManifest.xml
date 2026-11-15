@@ -3,6 +3,7 @@
 
     <application
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -39,6 +40,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The alert buzzes when the train is close; the WebView ignores
+         navigator.vibrate() without this. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Foreground only: the app works out which station you are standing at.
          ACCESS_COARSE alone is plenty for this, FINE is asked so a platform
          can be told apart from the road it is on. No background location. -->

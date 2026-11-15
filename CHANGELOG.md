@@ -3,6 +3,38 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.0 — 2026-11-15
+
+The UI/UX-review build: the app behaves like an Android app now.
+
+- The back button (and back gesture) closes whatever is open — the route sheet,
+  setup, Settings — and only exits the app when there is nothing left to close
+- Pull-to-refresh only listens when the board itself is pulled, never through a
+  sheet that is open on top of it
+- The Settings button steps out of the way while you scroll down, and the footer
+  stays on one line
+- When the big card scrolls off screen the countdown stays as a slim bar at the
+  top; tapping it opens that train's route
+- Under ten minutes the countdown reads "6:03 min", not "6 03s"
+- The update banner can be dismissed (it comes back for a newer version) and now
+  keeps showing the download's progress while it downloads
+- Station pickers have a type-to-find box; Settings no longer has two sections
+  called "Updates", the API key folds away to one line, "Clear saved data" asks
+  for a second tap, and tapping anywhere on a settings row toggles its switch
+- Tap targets are thumb-sized everywhere, including banner buttons
+- Dark mode: brighter purple text and borders, a settings button you can see,
+  and no white flash at launch on a dark phone
+- The phone's font size setting is finally honoured
+- The route sheet keeps its summary (when, does it stop, which platform) pinned
+  and ends with a Done button
+- The decorative line above the direction row is gone; it pretended to be a
+  slider and did nothing
+- The alert actually buzzes now (the app was missing the vibrate permission) and
+  honestly says it only fires while the app is on screen
+- Setup no longer asks for location on top of itself; it asks just after
+- The screen reader is told "due now" once instead of every minute
+- With no data the board stops showing a confident journey card under the error
+
 ## 1.4.2 — 2026-11-15
 
 - The app is now locked to portrait. Rotating the phone sideways broke the

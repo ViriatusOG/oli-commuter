@@ -23,9 +23,9 @@
     --radius:20px;
   }
   html[data-theme="dark"]{
-    --el:#8b47ff; --el-2:#5c17c9; --el-soft:#241640;
-    --bg:#0d0c12; --card:#17161f; --ink:#f1eff7; --ink-2:#bdb8cb; --muted:#928da3;
-    --line:#292733; --line-strong:#3a3748;
+    --el:#a680ff; --el-2:#5c17c9; --el-soft:#241640;
+    --bg:#0d0c12; --card:#17161f; --ink:#f1eff7; --ink-2:#c9c4d6; --muted:#9d98ae;
+    --line:#292733; --line-strong:#6a6490;
     --ok:#4ad08a; --ok-soft:#12291d; --warn:#f0b95e; --warn-soft:#2b2113; --bad:#ff8095; --bad-soft:#2e1419;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -14px rgba(0,0,0,.7);
   }
@@ -43,14 +43,17 @@
   .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
 
-  .app{width:100%; max-width:540px; padding:calc(10px + env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
+  .app{width:100%; max-width:540px; padding:calc(10px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
        transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
   .app.is-pulling{transition:none}
 
   /* ---------- one-thumb reach: the single button that remains ---------- */
   .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:35;
        width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--card);
-       box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
+       box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;
+       transition:transform .2s ease,opacity .2s ease}
+  .fab.hide{transform:translateY(90px);opacity:0;pointer-events:none}
+  html[data-theme="dark"] .fab{background:#232030;border-color:#514b6b}
   .fab svg{width:24px;height:24px}
   .fab:active{transform:scale(.94)}
   .hero{cursor:pointer}
@@ -82,13 +85,6 @@
   .pull-ind.loading svg{animation:spin .8s linear infinite}
 
   /* ---------- one row: where you are + the flip button ---------- */
-  .icon-btn{
-    width:44px;height:44px;flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:14px;
-    display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);
-  }
-  .icon-btn:active{transform:scale(.94)}
-  .icon-btn svg{width:21px;height:21px;display:block}
-  .icon-btn.spin svg{animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 
   /* ---------- generic card ---------- */
@@ -112,20 +108,18 @@
   .banner[data-sev="update"] b{color:var(--ink)}
   .banner[data-sev="update"] span{color:var(--muted)}
   .banner[data-sev="update"] svg{color:var(--el)}
-  .banner .act{flex:0 0 auto;margin-top:1px;min-height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--el);background:var(--el);color:#fff;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+  .banner .act{flex:0 0 auto;margin-top:1px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--el);background:var(--el);color:#fff;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
   #updateBannerSlot{margin-top:8px}
   .banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
   .banner .why{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:inherit;opacity:.92;margin-top:3px;font-size:.8rem}
-  .banner .close{margin-left:auto;background:none;border:0;padding:2px;opacity:.7;cursor:pointer}
-  .banner .close svg{width:16px;height:16px;margin:0}
+  .banner .close{margin-left:auto;background:none;border:0;padding:0;opacity:.7;cursor:pointer;
+    width:44px;height:44px;flex:0 0 auto;display:grid;place-items:center;margin-right:-14px;margin-top:-10px}
+  .banner .close svg{width:18px;height:18px;margin:0}
+  .dlbar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:7px;min-width:120px}
+  .dlbar i{display:block;height:100%;width:0;background:var(--el);border-radius:99px;transition:width .2s}
 
   /* ---------- journey / direction picker ---------- */
   .journey{padding:14px}
-  .route-strip{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px}
-  .route-strip .st{font-size:.82rem;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
-  .route-strip .track{flex:1 1 auto;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--el) 0 12%, var(--line-strong) 12% 88%, var(--el) 88% 100%);position:relative}
-  .route-strip .track i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--el);border:3px solid var(--card);transform:translate(-50%,-50%);left:12%;box-shadow:0 0 0 1px var(--el)}
-  .route-strip.rev .track i{left:88%}
   .dir-row{display:flex;align-items:center;gap:12px;padding:2px 0}
   .dir-txt{flex:1 1 auto;min-width:0}
   .dir-txt small{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
@@ -136,7 +130,7 @@
   .flip svg{width:24px;height:24px}
   /* "which station am I at" line */
   .geo{display:flex;align-items:center;gap:7px;width:100%;margin-top:10px;padding:6px 4px;border:0;background:none;
-       font:inherit;font-size:.79rem;color:var(--muted);text-align:left;cursor:pointer;border-radius:10px;min-height:34px}
+       font:inherit;font-size:.79rem;color:var(--muted);text-align:left;cursor:pointer;border-radius:10px;min-height:44px}
   .geo svg.pin{width:14px;height:14px;flex:0 0 auto;opacity:.8}
   .geo b{color:var(--ink);font-weight:700}
   .geo.on{color:var(--el)} .geo.on b{color:var(--el)}
@@ -151,7 +145,7 @@
     background:radial-gradient(120% 130% at 100% 0%, color-mix(in srgb, var(--el) 78%, #b06cff) 0%, var(--el) 45%, var(--el-2) 100%);
     box-shadow:0 12px 34px -18px color-mix(in srgb, var(--el) 90%, black);
   }
-  .hero .kicker{display:flex;align-items:center;gap:8px;font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;font-weight:800;opacity:.9}
+  .hero .kicker{display:flex;align-items:center;gap:8px;font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;font-weight:800;opacity:1}
   .live{width:8px;height:8px;border-radius:50%;background:#7dffb0;box-shadow:0 0 0 0 rgba(125,255,176,.8);animation:pulse 2s infinite}
   @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(125,255,176,0)}100%{box-shadow:0 0 0 0 rgba(125,255,176,0)}}
   .hero .when{display:flex;align-items:baseline;gap:10px;margin-top:6px}
@@ -164,7 +158,9 @@
   .chip.plat{background:#fff;color:var(--el-2);border-color:#fff}
   .hero .via{margin-top:8px;font-size:.8rem;opacity:.92;line-height:1.45}
   .hero .via-box{margin-top:10px;border-top:1px solid rgba(255,255,255,.24);padding-top:8px}
-  .hero .via-box summary{cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;opacity:.95;min-height:26px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hero .via-box summary{cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;opacity:1;min-height:44px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding:11px 0}
+  #heroRetry, #heroSettings{min-height:44px;padding:8px 14px;display:inline-flex;align-items:center}
   .hero .via-box summary::-webkit-details-marker{display:none}
   .hero .via-box summary::before{content:"▸";font-size:.8em;transition:transform .18s}
   .hero .via-box[open] summary::before{transform:rotate(90deg)}
@@ -179,7 +175,7 @@
   .list{padding:6px 14px 12px}
   .list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 6px}
   .list-head h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
-  .link-btn{background:none;border:0;color:var(--el);font-weight:700;font-size:.84rem;cursor:pointer;padding:8px;border-radius:10px;min-height:36px}
+  .link-btn{background:none;border:0;color:var(--el);font-weight:700;font-size:.84rem;cursor:pointer;padding:8px;border-radius:10px;min-height:44px}
   .deps li+li{border-top:1px solid var(--line)}
   .dep{display:grid;grid-template-columns:60px 1fr;gap:12px;align-items:center;padding:11px 0}
   .dep.hasbadge{grid-template-columns:60px 1fr auto}
@@ -223,7 +219,8 @@
   .skel-row .a{height:44px;border-radius:12px}
 
   /* ---------- footer ---------- */
-  .foot{display:flex;align-items:center;gap:10px;padding:2px 4px;font-size:.78rem;color:var(--muted);flex-wrap:wrap}
+  .foot{display:flex;align-items:center;gap:10px;padding:2px 4px;font-size:.78rem;color:var(--muted);white-space:nowrap}
+  .foot #updated{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .foot .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:0 0 auto}
   .foot .dot.ok{background:var(--ok)}
   .foot .dot.bad{background:var(--bad)}
@@ -232,24 +229,26 @@
   /* ---------- sheet ---------- */
   .scrim{position:fixed;inset:0;background:rgba(10,6,22,.5);z-index:40;backdrop-filter:blur(2px)}
   .sheet{
-    position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:92dvh;overflow:auto;overscroll-behavior:contain;
-    background:var(--card);border-top:1px solid var(--line);border-radius:26px 26px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));
+    position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;
+    background:var(--card);border-top:1px solid var(--line);border-radius:26px 26px 0 0;padding:8px 16px 0;
     animation:up .28s cubic-bezier(.2,.8,.2,1)
   }
   @keyframes up{from{transform:translateY(6%)}}
-  .sheet .grab{width:42px;height:5px;border-radius:99px;background:var(--line-strong);margin:6px auto 10px}
+  .sheet[hidden]{display:none}
+  .sheet .grab{width:42px;height:5px;border-radius:99px;background:var(--line-strong);margin:6px auto 10px;flex:0 0 auto}
+  .sheet-scroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
   .sheet h2{font-size:1.12rem;letter-spacing:-.01em;margin-bottom:2px}
   .sheet .lede{font-size:.84rem;color:var(--muted);margin-bottom:14px}
-  .field{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .field{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
   .field .lbl{flex:1 1 auto;min-width:0}
   .field .lbl b{display:block;font-size:.94rem;font-weight:750}
   .field .lbl span{display:block;font-size:.78rem;color:var(--muted);line-height:1.35}
-  .switch{position:relative;width:52px;height:32px;flex:0 0 auto}
+  .switch{position:relative;width:56px;height:34px;flex:0 0 auto}
   .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
   .switch i{position:absolute;inset:0;border-radius:99px;background:var(--line-strong);transition:background .18s;pointer-events:none}
-  .switch i::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .18s}
+  .switch i::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .18s}
   .switch input:checked+i{background:var(--el)}
-  .switch input:checked+i::after{transform:translateX(20px)}
+  .switch input:checked+i::after{transform:translateX(22px)}
   .switch input:focus-visible+i{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent);outline-offset:2px}
   .txt{width:100%;min-height:48px;padding:11px 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);font:inherit;font-size:.94rem}
   .txt:invalid{border-color:var(--line-strong)}
@@ -257,17 +256,35 @@
   .row{display:flex;gap:8px;flex-wrap:wrap}
   .row .btn{flex:1 1 140px}
   .sheet h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 2px;font-weight:800}
+  #miniBar{position:fixed;top:0;left:0;right:0;z-index:36;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:calc(7px + env(safe-area-inset-top)) 18px 8px;background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem}
+  #miniBar .mk{color:var(--muted);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #miniBar .mc{color:var(--el);font-weight:800;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .sheet-done{flex:0 0 auto;margin:14px -16px 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));
+    background:var(--card);border-top:1px solid var(--line)}
+  .sheet-done .btn{width:100%}
+  #routeSheet .route-head{position:sticky;top:0;z-index:2;background:var(--card);padding:8px 0 6px}
+  .keybox summary{cursor:pointer;font-weight:750;font-size:.9rem;min-height:44px;display:flex;align-items:center}
+  .btn.danger{border-color:var(--bad);color:var(--bad);box-shadow:none}
   .fine{font-size:.76rem;color:var(--muted);line-height:1.45}
   .fine a{color:var(--el)}
   select.txt{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(-45deg,transparent 50%,var(--muted) 50%);background-position:right 16px center,right 11px center;background-size:5px 5px;background-repeat:no-repeat}
 
   /* ---------- larger screens ---------- */
+  @media (max-height:720px){
+    .hero{padding:12px 14px 10px;border-radius:18px}
+    .hero .cd{font-size:clamp(2.2rem,12vw,3rem)}
+    .hero .when{margin-top:2px}
+    .journey{padding:10px 12px}
+    .facts{margin-top:8px}
+  }
   @media (min-width:860px){
     .app{max-width:840px;gap:14px}
     main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
     #journey{grid-column:1}
     #heroWrap{grid-column:1;position:sticky;top:8px}
-    #listCard{grid-column:2;grid-row:1 / span 2;position:sticky;top:72px;max-height:calc(100dvh - 150px);overflow:auto}
+    #listCard{grid-column:2;grid-row:1 / span 2;position:sticky;top:8px}
     main{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
   }
   @media (prefers-reduced-motion:reduce){
@@ -280,6 +297,10 @@
 
   <div id="bannerSlot"></div>
   <div id="updateBannerSlot"></div>
+
+  <div id="miniBar" hidden>
+    <span class="mk" id="miniK">Next train</span><span class="mc" id="miniC">—</span>
+  </div>
 
   <main>
     <div id="heroWrap">
@@ -295,11 +316,6 @@
     </div>
 
     <section class="card journey" id="journey" aria-label="Direction of travel">
-      <div class="route-strip" id="routeStrip" aria-hidden="true">
-        <span class="st" id="stripFrom">TCR</span>
-        <span class="track"><i></i></span>
-        <span class="st" id="stripTo">Hayes</span>
-      </div>
       <div class="dir-row">
         <div class="dir-txt">
           <small id="dirAt">I am at …</small>
@@ -311,7 +327,7 @@
       </div>
       <button class="geo" id="geoLine" type="button" title="Check where you are">
         <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 5.5-8 12-8 12s-8-6.5-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>
-        <span id="geoText">Working out which station you are at…</span>
+        <span id="geoText">Finding you…</span>
       </button>
       <div class="facts" id="facts"></div>
     </section>
@@ -348,24 +364,30 @@
 <div id="scrim3" class="scrim" hidden></div>
 <aside id="setupSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setupTitle">
   <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-scroll">
   <h2 id="setupTitle">Your two stations</h2>
   <p class="lede">Pick the station you leave from and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
   <h3>Home</h3>
+  <input class="txt" id="setupHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px;margin-bottom:6px">
   <select class="txt" id="setupHome"></select>
   <h3>Work</h3>
+  <input class="txt" id="setupWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px;margin-bottom:6px">
   <select class="txt" id="setupWork"></select>
   <p class="fine" id="setupNote" hidden>Both picks need to be different stations.</p>
   <div class="row" style="margin-top:16px">
     <button class="btn" id="setupLater">Set it up later</button>
     <button class="btn primary" id="setupDone">Done</button>
   </div>
+  </div>
 </aside>
 <aside id="routeSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="routeTitle">
   <div class="grab" aria-hidden="true"></div>
-  <div id="routeBody"></div>
+  <div class="sheet-scroll" id="routeScroll"><div id="routeBody"></div></div>
+  <div class="sheet-done"><button class="btn primary" id="btnRouteDone">Done</button></div>
 </aside>
 <aside id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-scroll">
   <h2 id="sheetTitle">Settings</h2>
   <p class="lede">Saved on this phone only. Nothing is uploaded anywhere.</p>
   <p class="fine" id="appVersion" style="margin-top:8px">Oli Commuter</p>
@@ -373,8 +395,10 @@
   <h3>Your stations</h3>
   <div class="stack">
     <label class="fine" for="optHome">Home</label>
+    <input class="txt" id="optHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px">
     <select class="txt" id="optHome"></select>
     <label class="fine" for="optWork">Work</label>
+    <input class="txt" id="optWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px">
     <select class="txt" id="optWork"></select>
     <p class="fine">The board shows the next train to Work while you are at Home, and the journey back the other way round. Changing either re-aims the whole board.</p>
   </div>
@@ -387,7 +411,7 @@
 
   <h3>Alerts</h3>
   <div class="field">
-    <span class="lbl"><b>Buzz me when the train is close</b><span>Vibrates and flashes once the next train is within your warning time.</span></span>
+    <span class="lbl"><b>Buzz me when the train is close</b><span>Buzzes once when the next train is within your warning time, while the app is on screen.</span></span>
     <label class="switch"><input type="checkbox" id="optAlerts"><i></i></label>
   </div>
   <div class="field">
@@ -405,7 +429,7 @@
     <div class="row"><button class="btn" id="btnGeoNow">Check again</button></div>
   </div>
 
-  <h3>Updates</h3>
+  <h3>The board</h3>
   <div class="field">
     <span class="lbl"><b>Refresh every 20 seconds</b><span>Switch off if your signal is poor; refresh by hand instead.</span></span>
     <label class="switch"><input type="checkbox" id="optAuto"><i></i></label>
@@ -422,13 +446,16 @@
   <h3>TfL data</h3>
   <div class="stack">
     <p class="fine" id="keyState">Checking whether live data works without a key…</p>
-    <label class="fine" for="optApiKey">API key</label>
+    <details class="keybox">
+      <summary>Add a TfL API key (optional)</summary>
+    <label class="fine" for="optApiKey" style="margin-top:6px">API key</label>
     <input class="txt" id="optApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
     <div class="row">
       <button class="btn primary" id="btnSaveKeys">Save key</button>
       <button class="btn" id="btnTestData">Test</button>
     </div>
     <p class="fine">Free at <a href="https://api-portal.tfl.gov.uk/" target="_blank" rel="noopener">api-portal.tfl.gov.uk</a> — your subscription's <b>primary key</b>. The key stays on this phone; TfL sees it only as the "app_key" on each request. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
+    </details>
   </div>
 
   <h3>If you want a look with no signal</h3>
@@ -437,9 +464,11 @@
     <label class="switch"><input type="checkbox" id="optDemo"><i></i></label>
   </div>
   <div class="stack">
-    <div class="row"><button class="btn" id="btnReset">Clear saved data</button></div>
+    <div class="row"><button class="btn danger" id="btnReset">Clear saved data</button></div>
     <p class="fine" id="homeTip">Tip: use your browser’s <b>Add to Home screen</b> (or <b>Add to Home Screen</b> on iPhone) to get this as an app icon that opens straight on the direction you use most.</p>
   </div>
+  </div>
+  <div class="sheet-done"><button class="btn primary" id="btnDoneSheet">Done</button></div>
 </aside>
 
 <noscript><p style="padding:20px">This page needs JavaScript to fetch live TfL departures.</p></noscript>
@@ -691,7 +720,12 @@ async function pollGeoOnce(){
       if(st === "denied" || st === "unsupported" || st === "off"){ renderGeo(); return; }
     }
     onPosition(await readPositionOnce());
-  }catch(e){ geoFail(e); }
+  }catch(e){
+    if(geo.state === "prompt"){
+      try{ const st = await askGeoPermission(); if(st !== "granted"){ renderGeo(); return; } }catch(err){}
+    }
+    geoFail(e);
+  }
 }
 
 function geoStatusLine(){
@@ -716,16 +750,21 @@ function renderGeo(){
     line.title = "Turn on location";
     line.dataset.act = "on"; return;
   }
-  if(geo.state === "denied" || geo.state === "unsupported"){
+  if(geo.state === "denied"){
+    txt.textContent = "Location is off — tap to switch on";
+    line.title = "Turn on location";
+    line.dataset.act = "on"; return;
+  }
+  if(geo.state === "unsupported"){
     txt.textContent = "Location unavailable — pick the direction below";
     line.dataset.act = "none"; return;
   }
   if(!geo.pos){
-    txt.textContent = "Working out which station you are at…";
+    txt.textContent = "Finding you…";
     line.dataset.act = "refresh"; return;
   }
   if(!n){
-    txt.textContent = "Location known, station coordinates still loading";
+    txt.textContent = "Can't tell where you are — tap to try again";
     line.dataset.act = "refresh"; return;
   }
   line.dataset.act = "refresh";
@@ -916,13 +955,17 @@ function maybeOpenSetup(){
   if(store.get("setupSeen", false)) return;
   setupOpened = true;
   store.set("setupSeen", true);
+  $("setupHomeFind").value = ""; $("setupWorkFind").value = "";
   fillStationSelects($("setupHome"), state.ids.home);
   fillStationSelects($("setupWork"), state.ids.work);
   setupPreview();
   $("setupSheet").hidden = false; $("scrim2").hidden = false;
   document.body.style.overflow = "hidden";
 }
-function closeSetup(){ $("setupSheet").hidden = true; $("scrim2").hidden = true; document.body.style.overflow = ""; }
+function closeSetup(){
+  $("setupSheet").hidden = true; $("scrim2").hidden = true; document.body.style.overflow = "";
+  if(geoDeferred){ geoDeferred = false; if(settings.geoOn){ startGeoWatch(); pollGeoOnce(); } }
+}
 
 /* ============================================================
    Departures
@@ -1047,9 +1090,10 @@ function sampleArrivals(){
    Rendering
    ============================================================ */
 /* big number + small unit, the way a departure board reads */
+let wasDue = null;
 function heroCountdown(m, secs){
   if(m < 1)   return { big:"Due",  small:"" };
-  if(m < 10)  return { big:String(Math.floor(m)), small:pad2(secs%60)+"s" };
+  if(m < 10)  return { big:String(Math.floor(m)) + ":" + pad2(secs%60), small:"min" };
   if(m < 60)  return { big:String(Math.floor(m)), small:"min" };
   return { big:Math.floor(m/60)+"h"+pad2(Math.round(m%60)), small:"" };
 }
@@ -1067,9 +1111,6 @@ function renderJourney(){
   const from = STATIONS[r.from], to = STATIONS[r.to];
   $("dirAt").textContent = "I am at " + from.label;
   $("dirTo").textContent = "Train to " + to.label;
-  $("stripFrom").textContent = from.abbr;
-  $("stripTo").textContent = to.abbr;
-  $("routeStrip").classList.toggle("rev", state.route === "to-home");
   $("heroKicker").textContent = r.title;
   document.title = `Oli Commuter · next train to ${to.label}`;
 
@@ -1114,11 +1155,14 @@ function renderHero(){
       </div>`;
     $("heroRetry").addEventListener("click", () => keys ? openSheet() : refresh(true));
     $("heroSettings").addEventListener("click", openSheet);
+    $("journey").hidden = true;
+    $("miniBar").hidden = true;
     return;
   }
 
   if(!next){
     hero.classList.remove("due");
+    $("journey").hidden = false; $("miniBar").hidden = true;
     body.innerHTML = `<div class="to">No train found that stops at ${esc(STATIONS[otherKey()].label)}</div>
       <div class="via">None of the next 45 departures on TfL’s feed reaches that station. Turn on “${settings.showAll?"Hide":"Show"} trains that miss this station” to see what is running, or check the line status above — engineering works and part closures do cause this.</div>`;
     return;
@@ -1137,7 +1181,7 @@ function renderHero(){
     : "";
   body.innerHTML = `
     <div class="when">
-      <div class="cd">${esc(lab.big)}${lab.small?`<small>${esc(lab.small)}</small>`:""}</div>
+      <div class="cd" aria-hidden="true">${esc(lab.big)}${lab.small?`<small>${esc(lab.small)}</small>`:""}</div>
       <div class="clock">${fmtClock(clock)}</div>
     </div>
     <div class="to">${esc(next.destination)}${next.platform?`<span class="chip plat">Platform ${esc(next.platform)}</span>`:""}</div>
@@ -1152,7 +1196,28 @@ function renderHero(){
   renderJourneyViaOnly();
 
   hero.dataset.depId = next.id;
+  $("journey").hidden = false;
+  updateMini();
 }
+
+let heroOff = false;
+function updateMini(){
+  const bar = $("miniBar");
+  const next = decorate(state.arrivals).filter(isGood)[0];
+  const show = heroOff && !!next && !$("hero").classList.contains("is-error");
+  bar.hidden = !show;
+  if(!show) return;
+  const m = next.minutes;
+  const secs = clamp(Math.round((next.eta - (Date.now()+state.serverSkew))/1000), 0, 3599);
+  const lab = heroCountdown(m, secs);
+  $("miniC").textContent = lab.big === "Due" ? "Due now" : lab.big + (lab.small ? " " + lab.small : "");
+  $("miniK").textContent = "Next train to " + STATIONS[otherKey()].label;
+}
+new IntersectionObserver(es => { heroOff = !es[es.length-1].isIntersecting; updateMini(); }, { threshold: 0 }).observe($("heroWrap"));
+$("miniBar").addEventListener("click", () => {
+  const dd = decorate(state.arrivals).find(x => x.id === $("hero").dataset.depId);
+  if(dd) openRouteSheet(dd);
+});
 
 function routePath(){
   const r = ROUTES[state.route];
@@ -1311,10 +1376,10 @@ function tick(){
       const cd = $("heroBody").querySelector(".cd");
       cd.innerHTML = esc(lab.big) + (lab.small?`<small>${esc(lab.small)}</small>`:"");
       $("hero").classList.toggle("due", m <= 1 && m > -2);
-      if(Math.floor(m) !== state.lastAnnounce && m > -1){
-        state.lastAnnounce = Math.floor(m);
-        $("announce").textContent = `Next train to ${STATIONS[otherKey()].label}: ${next.destination}, ${lab.big==="Due"?"due now":"in "+lab.big+" minutes"}${next.platform?", platform "+next.platform:""}.`;
-      }
+      const due = lab.big === "Due";
+      if(due !== wasDue){ wasDue = due; if(due) $("announce").textContent = `Heads up — ${next.destination} for ${STATIONS[otherKey()].label} is due now.`; }
+      const mc = $("miniC");
+      if(mc && !$("miniBar").hidden) mc.textContent = lab.big === "Due" ? "Due now" : lab.big + (lab.small ? " " + lab.small : "");
       maybeAlert(next);
     }
   }
@@ -1399,6 +1464,7 @@ const UPDATE = {
       if(verCmp(latest.version, inst.version) > 0){
         state.update = Object.assign(state.update || {}, { status:"available", version:latest.version,
           url:latest.url, shaUrl:latest.shaUrl, bytes:latest.bytes, pct:0, error:"" });
+        state.updateDismissed = store.get("updateDismissedFor", null) === latest.version;
         if(manual) setUpdateLine(`Version ${latest.version} is available. Download it any time you like.`);
       } else {
         state.update = null; state.updatePath = null;
@@ -1422,7 +1488,10 @@ const UPDATE = {
     const sha = await this.sha256For(u);
     let off = null;
     try{
-      off = await P.addListener("progress", ev => { u.pct = ev.pct || 0; setUpdateLine("Downloading… " + Math.round(u.pct) + "%"); });
+      off = await P.addListener("progress", ev => {
+        u.pct = ev.pct || 0; setUpdateLine("Downloading… " + Math.round(u.pct) + "%");
+        renderUpdate();
+      });
       const res = await P.download({ url: u.url, sha256: sha || "" });
       state.updatePath = res.path;
       u.status = "ready"; u.pct = 100;
@@ -1463,7 +1532,16 @@ function renderUpdate(){
   }
   const slot = $("updateBannerSlot");
   if(!slot) return;
-  if(!u || state.updateDismissed || u.status === "downloading" || (u.status !== "available" && u.status !== "ready")){
+  if(u && u.status === "downloading"){
+    const mb = u.bytes ? " of " + Math.round(u.bytes/1048576) + " MB" : "";
+    slot.innerHTML = `<div class="banner" data-sev="update" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      <div class="body"><b>Downloading Oli Commuter ${esc(u.version)}</b>
+        <span>It keeps going while you use the board.<b> <b>${Math.round(u.pct)}%</b>${mb}</b></span>
+        <div class="dlbar"><i style="width:${clamp(u.pct,2,100)}%"></i></div></div></div>`;
+    return;
+  }
+  if(!u || state.updateDismissed || (u.status !== "available" && u.status !== "ready")){
     slot.innerHTML = ""; return;
   }
   const ready = u.status === "ready";
@@ -1472,8 +1550,12 @@ function renderUpdate(){
       <div class="body"><b>Oli Commuter ${esc(u.version)} ${ready ? "is downloaded" : "is available"}</b>
         <span>${ready ? "The old version keeps working until you install it." : "It installs straight over this one — nothing is lost."}</span></div>
       <button class="act" id="bannerUpdate">${ready ? "Install" : "Update"}</button>
+      <button class="close" id="dismissUpdate" aria-label="Dismiss this update"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>`;
   slot.querySelector("#bannerUpdate").addEventListener("click", () => ready ? UPDATE.install() : UPDATE.download());
+  slot.querySelector("#dismissUpdate").addEventListener("click", () => {
+    state.updateDismissed = true; store.set("updateDismissedFor", u.version); renderUpdate();
+  });
 }
 
 /* ============================================================
@@ -1569,7 +1651,7 @@ function setPull(dy, opts){
 
 function pullStart(e){
   if(e.touches.length !== 1 || state.loading || PULL.held) return;
-  if(!$("sheet").hidden || (e.target.closest && e.target.closest("#sheet"))) return;
+  if(!$("sheet").hidden || !$("setupSheet").hidden || !$("routeSheet").hidden || (e.target.closest && e.target.closest(".sheet"))) return;
   if(window.scrollY > 6) return;
   const t = e.touches[0];
   PULL.active = true; PULL.mode = "maybe";
@@ -1621,6 +1703,26 @@ function fillStationSelects(el, selectedId){
   el.innerHTML = ids.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("");
   if(selectedId && state.names[selectedId]) el.value = selectedId;
 }
+function stationFilterPair(selectId, inputId){
+  const sel = $(selectId), inp = $(inputId);
+  if(!sel || !inp) return;
+  inp.addEventListener("input", () => {
+    const q = inp.value.trim().toLowerCase();
+    const ids = Object.keys(state.names || {}).sort((a,b) => cleanDest(state.names[a]).localeCompare(cleanDest(state.names[b])));
+    const keep = q ? ids.filter(id => cleanDest(state.names[id]).toLowerCase().includes(q)) : ids;
+    const before = sel.value;
+    sel.innerHTML = keep.length
+      ? keep.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("")
+      : `<option value="">no station matches</option>`;
+    if(keep.includes(before)) sel.value = before;
+    if(sel.value !== before) sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+stationFilterPair("setupHome","setupHomeFind");
+stationFilterPair("setupWork","setupWorkFind");
+stationFilterPair("optHome","optHomeFind");
+stationFilterPair("optWork","optWorkFind");
+
 function setupPreview(){
   const h = $("setupHome").value, w = $("setupWork").value;
   const ok = h && w && h !== w;
@@ -1689,10 +1791,16 @@ function openRouteSheet(d){
   } else {
     listHtml = `<p class="fine">TfL does not place this train\u2019s destination on the Elizabeth line data, so its route cannot be shown.</p>`;
   }
+  const when = minsLabel(d.minutes);
+  const calls = d.verdict === "stop" ? " · stops at your station" : d.verdict === "dir" ? " · right way, call unconfirmed" : "";
   $("routeBody").innerHTML = `
-    <h2 id="routeTitle">${esc(d.destination)} · ${fmtClock(clock)}</h2>
-    <p class="route-where">${d.platform?`Platform ${esc(d.platform)} · `:""}${where}</p>
+    <div class="route-head">
+      <h2 id="routeTitle">${esc(d.destination)} · ${fmtClock(clock)}</h2>
+      <p class="route-where">${when.big === "Due" ? "Due now" : when.big + " " + when.small}${calls}${d.platform?" · Platform "+esc(d.platform):""}</p>
+      <p class="route-where">${where}</p>
+    </div>
     ${listHtml}`;
+  $("routeScroll").scrollTop = 0;
   $("routeSheet").hidden = false; $("scrim3").hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -1768,22 +1876,61 @@ $("btnShowAll").addEventListener("click", () => {
 });
 
 /* sheet */
+let sheetReturnFocus = null;
 function openSheet(){
   syncSheet();
+  $("optHomeFind").value = ""; $("optWorkFind").value = "";
+  fillStationSelects($("optHome"), state.ids.home); fillStationSelects($("optWork"), state.ids.work);
+  sheetReturnFocus = document.activeElement;
   $("sheet").hidden = false; $("scrim").hidden = false;
   document.body.style.overflow = "hidden";
-  $("sheet").querySelector("input, select, button")?.focus();
+  const sc = $("sheet").querySelector(".sheet-scroll"); if(sc) sc.scrollTop = 0;
 }
-function closeSheet(){ $("sheet").hidden = true; $("scrim").hidden = true; document.body.style.overflow = ""; }
+function closeSheet(){
+  $("sheet").hidden = true; $("scrim").hidden = true; document.body.style.overflow = "";
+  try{ if(sheetReturnFocus && document.contains(sheetReturnFocus)) sheetReturnFocus.focus(); }catch(e){}
+}
 $("btnSettings").addEventListener("click", openSheet);
+$("btnDoneSheet").addEventListener("click", closeSheet);
+$("btnRouteDone").addEventListener("click", closeRouteSheet);
+/* the whole settings row is the switch: tapping anywhere on it toggles */
+document.addEventListener("click", e => {
+  const f = e.target.closest && e.target.closest(".field");
+  if(!f) return;
+  const sw = f.querySelector(".switch input");
+  if(!sw || e.target.closest(".switch") || e.target.closest("select")) return;
+  sw.checked = !sw.checked;
+  sw.dispatchEvent(new Event("change", { bubbles: true }));
+});
+let fabLast = 0;
+addEventListener("scroll", () => {
+  const y = window.scrollY, b = $("btnSettings");
+  if(!$("sheet").hidden){ b.classList.remove("hide"); return; }
+  if(y > 90 && y > fabLast + 3) b.classList.add("hide");
+  else if(y < fabLast - 3 || y <= 90) b.classList.remove("hide");
+  fabLast = y;
+}, { passive: true });
 $("scrim").addEventListener("click", closeSheet);
-addEventListener("keydown", (e) => { if(e.key === "Escape") closeSheet(); });
+function closeTopSheet(){
+  if(!$("routeSheet").hidden){ closeRouteSheet(); return true; }
+  if(!$("setupSheet").hidden){ setupOpened = true; closeSetup(); return true; }
+  if(!$("sheet").hidden){ closeSheet(); return true; }
+  return false;
+}
+addEventListener("keydown", (e) => { if(e.key === "Escape") closeTopSheet(); });
+if(isNativeApp()){
+  const PC = window.Capacitor.Plugins;
+  if(PC.App && PC.App.addListener){
+    try{ PC.App.addListener("backButton", () => { if(!closeTopSheet()) PC.App.exitApp(); }).catch(() => {}); }catch(e){}
+  }
+}
 
 /* Swipe a sheet down to dismiss it: drag while the content sits at the top,
    let go past a quarter of the way (or 140 px) and it goes. The thin strip of
    dimmed page above the sheet still closes it on a tap, as before. */
 function makeSheetClosable(sheetEl, scrimEl, closer){
   let y0 = null, dy = 0;
+  const scroller = () => sheetEl.querySelector(".sheet-scroll") || sheetEl;
   const reset = () => {
     sheetEl.style.transform = "";
     sheetEl.style.transition = "";
@@ -1793,14 +1940,14 @@ function makeSheetClosable(sheetEl, scrimEl, closer){
   sheetEl.addEventListener("touchstart", e => {
     if(e.touches.length !== 1) return;
     if(e.target.closest && e.target.closest("select, input, button, a, textarea, details, summary")) return;
-    if(sheetEl.scrollTop > 4) return;
+    if(scroller().scrollTop > 4) return;
     y0 = e.touches[0].clientY; dy = 0;
     sheetEl.style.transition = "none";
   }, { passive: true });
   sheetEl.addEventListener("touchmove", e => {
     if(y0 === null) return;
     if(e.touches[0]) dy = e.touches[0].clientY - y0;
-    if(dy > 0 && sheetEl.scrollTop <= 0){
+    if(dy > 0 && scroller().scrollTop <= 0){
       sheetEl.style.transform = "translateY(" + Math.round(dy * 0.92) + "px)";
       scrimEl.style.opacity = String(Math.max(0.25, 1 - dy / (sheetEl.offsetHeight || 600)));
     } else if(dy < -12){
@@ -1891,7 +2038,14 @@ $("btnTestData").addEventListener("click", async () => {
   catch(e){ st.textContent = (e.kind==="keys" ? "TfL needs a key: " : "Problem: ") + e.message; if(e.kind==="keys") state.needsKeys = true; }
   renderAll();
 });
+let resetArmed = false, resetT = null;
 $("btnReset").addEventListener("click", () => {
+  const b = $("btnReset");
+  if(!resetArmed){
+    resetArmed = true; b.textContent = "Tap again to clear everything";
+    clearTimeout(resetT); resetT = setTimeout(() => { resetArmed = false; b.textContent = "Clear saved data"; }, 4000);
+    return;
+  }
   Object.keys(localStorage).filter(k => k.startsWith(NS)).forEach(k => localStorage.removeItem(k));
   settings = Object.assign({}, defaults, { refreshMs:20000 });
   saveSettings(); closeSheet(); location.reload();
@@ -1913,7 +2067,8 @@ if(isNativeApp()){
   if(tip) tip.textContent = "This is the installed app, so there is nothing to add to a home screen. Times come from Transport for London over your own connection; nothing is stored anywhere but this phone.";
 }
 
-if(settings.geoOn) { startGeoWatch(); pollGeoOnce(); }
+let geoDeferred = !store.get("setupSeen", false);
+if(settings.geoOn && !geoDeferred){ startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
 function showVersion(){
   const el = $("appVersion");

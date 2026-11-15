@@ -35,7 +35,8 @@ id is `com.localtools.olicommuter`.
 - **Your two stations, Home and Work.** First run asks for them once; after that the whole
   board faces the right way — next train to Work when you are at Home, the journey back when
   you are not. Either one is changed in Settings any time, and every station on the line is a
-  valid pick, not just the two this app shipped with.
+  valid pick, not just the two this app shipped with — and each picker has a type-to-find box,
+  so forty-odd stations is never an alphabet trudge.
 - **The next train, unmissably big, and at the top.** Countdown, minutes, platform,
   destination, and whether it actually calls at the other station — the big card leads the
   screen and nothing else repeats it.
@@ -45,7 +46,8 @@ id is `com.localtools.olicommuter`.
   offers a new version as a banner, downloads it (progress included), verifies
   the published SHA-256 and hands it to Android's installer. You can also
   check by hand in Settings, and the old APK download still works if you ever
-  want it.
+  want it. The banner shows the download's progress and can be dismissed until there is a
+  newer version.
 - **Tap any train to see its route.** A train you can tap — the big one or any row in the list —
   opens its path: where it is now, where it came from, every stop between you and the
   destination, and your stations marked. TfL publishes the destination but not each train's full
@@ -59,13 +61,17 @@ id is `com.localtools.olicommuter`.
   fine; amber when there is a problem on the line; red, with an *on your route* badge, when the
   problem hits your two stations. The 20-second refresh can be paused; the board keeps the last
   real times and labels them as remembered rather than live if the signal drops.
-- **Alerts** vibrate — and notify, if you allow it — when the next train is within your warning
-  time.
+- **Alerts** buzz once when the next train is within your warning time, while the app is on
+  screen.
 - **One-handed by design.** One button on screen, where your thumb already is: Settings.
   Refreshing is a gesture, not a button. Light, dark or match-the-system appearance is a setting
   in Settings, not a button to hunt for.
 - **Pull to refresh.** Grab the board at the top and drag down, like every other app on
   your phone.
+- **Back always does the obvious thing.** Back (or Escape) closes the route sheet, setup or
+  Settings — whichever is on top — and only leaves the app when there is nothing left to
+  close. Every sheet also ends in a Done button, and once the big card scrolls away the
+  countdown lives on as a slim bar at the top of the screen.
 
 ## What the location is used for
 
