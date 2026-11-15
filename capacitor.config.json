@@ -1,0 +1,12 @@
+{
+  "appId": "com.localtools.olicommuter",
+  "appName": "Oli Commuter",
+  "webDir": "web",
+  "backgroundColor": "#f3f2f7",
+  "loggingBehavior": "silent",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

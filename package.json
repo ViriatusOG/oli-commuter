@@ -1,0 +1,24 @@
+{
+  "name": "oli-commuter",
+  "version": "1.0.0",
+  "description": "Elizabeth line departures board for Tottenham Court Road and Hayes & Harlington, as an Android app that knows which station you are standing at.",
+  "scripts": {
+    "build": "bash build.sh",
+    "sync": "npx cap sync android",
+    "open": "npx cap open android",
+    "icons": "python3 make-icons.py"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/geolocation": "^8.2.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ViriatusOG/oli-commuter.git"
+  }
+}

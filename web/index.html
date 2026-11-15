@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oli Commuter · Elizabeth line between Tottenham Court Road and Hayes & Harlington</title>
+<meta name="description" content="Live Elizabeth line departures that actually stop at Hayes & Harlington and Tottenham Court Road, built for a phone on the platform.">
+<meta name="theme-color" content="#6600cc">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Next Elizabeth">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236600cc'/%3E%3Crect x='8' y='26' width='48' height='12' rx='6' fill='%23fff'/%3E%3Ccircle cx='32' cy='32' r='9' fill='none' stroke='%23fff' stroke-width='5'/%3E%3C/svg%3E">
+<style>
+  /* ---------- theme ---------- */
+  :root{
+    --el:#6600cc; --el-2:#4a009a; --el-soft:#efe7ff;
+    --bg:#f3f2f7; --card:#ffffff; --ink:#141219; --ink-2:#4b4757; --muted:#6c6779;
+    --line:#e2dfeb; --line-strong:#cdc8dd;
+    --ok:#0a7a3c; --ok-soft:#e3f5ea; --warn:#8a5300; --warn-soft:#fdf0dc; --bad:#b3122f; --bad-soft:#fde7ea;
+    --shadow:0 1px 2px rgba(18,10,40,.06), 0 8px 24px -12px rgba(18,10,40,.18);
+    --radius:20px;
+  }
+  html[data-theme="dark"]{
+    --el:#8b47ff; --el-2:#5c17c9; --el-soft:#241640;
+    --bg:#0d0c12; --card:#17161f; --ink:#f1eff7; --ink-2:#bdb8cb; --muted:#928da3;
+    --line:#292733; --line-strong:#3a3748;
+    --ok:#4ad08a; --ok-soft:#12291d; --warn:#f0b95e; --warn-soft:#2b2113; --bad:#ff8095; --bad-soft:#2e1419;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:400 16px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display:flex; justify-content:center;
+    overscroll-behavior-y:contain; -webkit-tap-highlight-color:transparent;
+  }
+  button{font:inherit; color:inherit; touch-action:manipulation}
+  h1,h2,h3,p,ul,ol,figure{margin:0}
+  ul{list-style:none; padding:0}
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
+
+  .app{width:100%; max-width:540px; padding:0 14px calc(26px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px}
+
+  /* ---------- top bar ---------- */
+  .bar{
+    position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 2px 10px;
+    background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:blur(12px) saturate(1.2);
+  }
+  .mark{width:34px;height:34px;flex:0 0 auto;border-radius:9px;background:var(--el);display:grid;place-items:center}
+  .mark svg{width:22px;height:22px;display:block}
+  .bar-title{flex:1 1 auto; min-width:0}
+  .bar-title strong{display:block;font-size:1.02rem;letter-spacing:-.01em;line-height:1.2}
+  .bar-title span{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-title.compact span{color:var(--el);font-weight:700;font-variant-numeric:tabular-nums}
+  .icon-btn{
+    width:44px;height:44px;flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:14px;
+    display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .icon-btn:active{transform:scale(.94)}
+  .icon-btn svg{width:21px;height:21px;display:block}
+  .icon-btn.spin svg{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- generic card ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  /* ---------- banner ---------- */
+  .banner{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:16px;font-size:.85rem;line-height:1.4}
+  .banner .body{flex:1 1 auto;min-width:0}
+  .banner details{margin-top:4px}
+  .banner summary{cursor:pointer;list-style:none;font-size:.78rem;text-decoration:underline;text-underline-offset:2px;min-height:24px;display:flex;gap:6px;align-items:center}
+  .banner summary::-webkit-details-marker{display:none}
+  .banner .full{margin-top:6px;white-space:pre-line;font-size:.8rem}
+  .banner .affects{display:inline-block;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;background:currentColor;padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:.14em}
+  .banner .affects span{color:var(--card)}
+  .banner[data-sev="bad"]{background:var(--bad-soft);color:var(--bad);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
+  .banner[data-sev="warn"]{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
+  .banner[data-sev="good"]{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb, currentColor 24%, transparent)}
+  .banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+  .banner .why{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:inherit;opacity:.92;margin-top:3px;font-size:.8rem}
+  .banner .close{margin-left:auto;background:none;border:0;padding:2px;opacity:.7;cursor:pointer}
+  .banner .close svg{width:16px;height:16px;margin:0}
+
+  /* ---------- journey / direction picker ---------- */
+  .journey{padding:14px}
+  .route-strip{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px}
+  .route-strip .st{font-size:.82rem;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+  .route-strip .track{flex:1 1 auto;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--el) 0 12%, var(--line-strong) 12% 88%, var(--el) 88% 100%);position:relative}
+  .route-strip .track i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--el);border:3px solid var(--card);transform:translate(-50%,-50%);left:12%;box-shadow:0 0 0 1px var(--el)}
+  .route-strip.rev .track i{left:88%}
+  .seg{
+    display:flex;align-items:center;gap:10px;width:100%;
+    padding:11px 12px;min-height:58px;border:1.5px solid var(--line);background:transparent;border-radius:16px;cursor:pointer;text-align:left;
+  }
+  .seg small{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  .seg b{font-size:1rem;letter-spacing:-.015em;line-height:1.2}
+  .seg[aria-pressed="true"]{border-color:var(--el);background:var(--el-soft);box-shadow:inset 0 0 0 1px var(--el)}
+  .seg[aria-pressed="true"] small{color:var(--el)}
+  .seg:active{transform:scale(.99)}
+  .seg-grid{display:grid;gap:8px}
+  .seg .tick{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;display:grid;place-items:center}
+  .seg[aria-pressed="true"] .tick{border-color:var(--el);background:var(--el)}
+  .seg .tick svg{width:13px;height:13px;opacity:0;color:#fff}
+  .seg[aria-pressed="true"] .tick svg{opacity:1}
+  .seg .txt-wrap{display:flex;flex-direction:column;gap:1px;min-width:0}
+  /* "which station am I at" line */
+  .geo{display:flex;align-items:center;gap:7px;width:100%;margin-top:10px;padding:6px 4px;border:0;background:none;
+       font:inherit;font-size:.79rem;color:var(--muted);text-align:left;cursor:pointer;border-radius:10px;min-height:34px}
+  .geo svg.pin{width:14px;height:14px;flex:0 0 auto;opacity:.8}
+  .geo b{color:var(--ink);font-weight:700}
+  .geo.on{color:var(--el)} .geo.on b{color:var(--el)}
+  .geo:active{background:var(--el-soft)}
+  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .fact{font-size:.78rem;padding:5px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--ink-2);font-weight:600}
+  .fact b{color:var(--ink);font-weight:800}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;overflow:hidden;border:0;color:#fff;padding:16px 16px 14px;border-radius:24px;
+    background:radial-gradient(120% 130% at 100% 0%, color-mix(in srgb, var(--el) 78%, #b06cff) 0%, var(--el) 45%, var(--el-2) 100%);
+    box-shadow:0 12px 34px -18px color-mix(in srgb, var(--el) 90%, black);
+  }
+  .hero .kicker{display:flex;align-items:center;gap:8px;font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;font-weight:800;opacity:.9}
+  .live{width:8px;height:8px;border-radius:50%;background:#7dffb0;box-shadow:0 0 0 0 rgba(125,255,176,.8);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(125,255,176,0)}100%{box-shadow:0 0 0 0 rgba(125,255,176,0)}}
+  .hero .when{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+  .hero .cd{font-size:clamp(3rem,20vw,4.4rem);font-weight:800;line-height:.95;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+  .hero .cd small{font-size:.32em;font-weight:800;letter-spacing:0;margin-left:.15em;opacity:.92}
+  .hero .clock{font-size:1.02rem;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:10px}
+  .hero .to{margin-top:8px;font-size:1.18rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:.78rem;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.28);white-space:nowrap}
+  .chip.plat{background:#fff;color:var(--el-2);border-color:#fff}
+  .hero .via{margin-top:8px;font-size:.8rem;opacity:.92;line-height:1.45}
+  .hero .via-box{margin-top:10px;border-top:1px solid rgba(255,255,255,.24);padding-top:8px}
+  .hero .via-box summary{cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;opacity:.95;min-height:26px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hero .via-box summary::-webkit-details-marker{display:none}
+  .hero .via-box summary::before{content:"▸";font-size:.8em;transition:transform .18s}
+  .hero .via-box[open] summary::before{transform:rotate(90deg)}
+  .hero .via-box[hidden]{display:none}
+  .hero.due{animation:due 1.1s ease-in-out infinite}
+  .hero.is-error .live{display:none}
+  .hero.is-error .kicker{opacity:.8}
+  @keyframes due{50%{box-shadow:0 0 0 8px color-mix(in srgb, var(--el) 26%, transparent)}}
+  .hero.hidden{display:none}
+
+  /* ---------- list ---------- */
+  .list{padding:6px 14px 12px}
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 6px}
+  .list-head h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+  .link-btn{background:none;border:0;color:var(--el);font-weight:700;font-size:.84rem;cursor:pointer;padding:8px;border-radius:10px;min-height:36px}
+  .deps li+li{border-top:1px solid var(--line)}
+  .dep{display:grid;grid-template-columns:60px 1fr;gap:12px;align-items:center;padding:11px 0}
+  .dep.hasbadge{grid-template-columns:60px 1fr auto}
+  .dep .mid{min-width:0}
+  .dep .dest{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dep .mins{
+    display:grid;place-items:center;height:44px;border-radius:12px;background:var(--el-soft);color:var(--el);
+    font-weight:800;font-variant-numeric:tabular-nums;font-size:1.02rem;letter-spacing:-.02em
+  }
+  .dep .mins small{display:block;font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+  .dep.now .mins{background:var(--el);color:#fff}
+  .dep .dest{font-weight:750;letter-spacing:-.01em;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .dep .dest .pf{font-size:.72rem;font-weight:800;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);padding:2px 7px;border-radius:8px}
+  .dep .sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .dep .badge{font-size:.72rem;font-weight:800;padding:5px 9px;border-radius:99px;white-space:nowrap}
+  .badge.stop{background:var(--ok-soft);color:var(--ok)}
+  .badge.no{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  .badge.q{background:var(--warn-soft);color:var(--warn)}
+  .dep.other{opacity:.62}
+  .dep.other .mins{background:var(--bg);color:var(--muted)}
+  details.more{margin-top:4px}
+  details.more>summary{list-style:none;cursor:pointer;padding:10px 0;font-size:.84rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;min-height:44px}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary svg{width:15px;height:15px;transition:transform .2s}
+  details.more[open]>summary svg{transform:rotate(90deg)}
+
+  /* ---------- states ---------- */
+  .state{padding:22px 16px;text-align:center;color:var(--ink-2)}
+  .state h3{font-size:1.06rem;color:var(--ink);letter-spacing:-.01em;margin-bottom:4px}
+  .state p{font-size:.88rem;margin-bottom:12px}
+  .state .art{font-size:2rem;line-height:1;margin-bottom:8px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:14px;
+    border:1px solid var(--line);background:var(--card);font-weight:750;cursor:pointer;box-shadow:var(--shadow)
+  }
+  .btn.primary{background:var(--el);border-color:var(--el);color:#fff}
+  .btn:active{transform:scale(.98)}
+  .skeleton{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--line) 0 40%,var(--line-strong) 50% 60%,var(--line) 70% 100%);background-size:280% 100%;animation:sh 1.3s linear infinite}
+  @keyframes sh{to{background-position:-280% 0}}
+  .skel-row{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+  .skel-row .a{height:44px;border-radius:12px}
+
+  /* ---------- footer ---------- */
+  .foot{display:flex;align-items:center;gap:10px;padding:2px 4px;font-size:.78rem;color:var(--muted);flex-wrap:wrap}
+  .foot .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+  .foot .dot.ok{background:var(--ok)}
+  .foot .dot.bad{background:var(--bad)}
+  .foot .grow{flex:1 1 auto}
+
+  /* ---------- sheet ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(10,6,22,.5);z-index:40;backdrop-filter:blur(2px)}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:92dvh;overflow:auto;overscroll-behavior:contain;
+    background:var(--card);border-top:1px solid var(--line);border-radius:26px 26px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));
+    animation:up .28s cubic-bezier(.2,.8,.2,1)
+  }
+  @keyframes up{from{transform:translateY(6%)}}
+  .sheet .grab{width:42px;height:5px;border-radius:99px;background:var(--line-strong);margin:6px auto 10px}
+  .sheet h2{font-size:1.12rem;letter-spacing:-.01em;margin-bottom:2px}
+  .sheet .lede{font-size:.84rem;color:var(--muted);margin-bottom:14px}
+  .field{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .field .lbl{flex:1 1 auto;min-width:0}
+  .field .lbl b{display:block;font-size:.94rem;font-weight:750}
+  .field .lbl span{display:block;font-size:.78rem;color:var(--muted);line-height:1.35}
+  .switch{position:relative;width:52px;height:32px;flex:0 0 auto}
+  .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
+  .switch i{position:absolute;inset:0;border-radius:99px;background:var(--line-strong);transition:background .18s;pointer-events:none}
+  .switch i::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .18s}
+  .switch input:checked+i{background:var(--el)}
+  .switch input:checked+i::after{transform:translateX(20px)}
+  .switch input:focus-visible+i{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent);outline-offset:2px}
+  .txt{width:100%;min-height:48px;padding:11px 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);font:inherit;font-size:.94rem}
+  .txt:invalid{border-color:var(--line-strong)}
+  .stack{display:grid;gap:8px;padding:11px 0;border-top:1px solid var(--line)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row .btn{flex:1 1 140px}
+  .sheet h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 2px;font-weight:800}
+  .fine{font-size:.76rem;color:var(--muted);line-height:1.45}
+  .fine a{color:var(--el)}
+  select.txt{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(-45deg,transparent 50%,var(--muted) 50%);background-position:right 16px center,right 11px center;background-size:5px 5px;background-repeat:no-repeat}
+
+  /* ---------- larger screens ---------- */
+  @media (min-width:860px){
+    .app{max-width:840px;gap:14px}
+    main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+    #journey{grid-column:1}
+    #heroWrap{grid-column:1;position:sticky;top:72px}
+    #listCard{grid-column:2;grid-row:1 / span 2;position:sticky;top:72px;max-height:calc(100dvh - 150px);overflow:auto}
+    main{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="bar">
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="1" y="10" width="22" height="4.6" rx="2.3" fill="#fff"/><circle cx="12" cy="12.3" r="5.4" stroke="#fff" stroke-width="2.4" fill="none"/></svg>
+    </span>
+    <div class="bar-title" id="barTitle">
+      <strong>Next train</strong>
+      <span id="barSub">Elizabeth line · live departures</span>
+    </div>
+    <button class="icon-btn" id="btnRefresh" title="Refresh" aria-label="Refresh departures">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <button class="icon-btn" id="btnSettings" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+    </button>
+  </header>
+
+  <div id="bannerSlot"></div>
+
+  <main>
+    <section class="card journey" id="journey" aria-label="Direction of travel">
+      <div class="route-strip" id="routeStrip" aria-hidden="true">
+        <span class="st" id="stripFrom">TCR</span>
+        <span class="track"><i></i></span>
+        <span class="st" id="stripTo">Hayes</span>
+      </div>
+      <div class="seg-grid">
+        <button class="seg" data-dir="to-hayes" aria-pressed="true">
+          <span class="txt-wrap"><small>I am at Tottenham Court Road</small><b>Train to Hayes &amp; Harlington</b></span>
+          <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
+        </button>
+        <button class="seg" data-dir="to-tcr" aria-pressed="false">
+          <span class="txt-wrap"><small>I am at Hayes &amp; Harlington</small><b>Train to Tottenham Court Road</b></span>
+          <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
+        </button>
+      </div>
+      <button class="geo" id="geoLine" type="button" title="Check where you are">
+        <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 5.5-8 12-8 12s-8-6.5-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        <span id="geoText">Working out which station you are at…</span>
+      </button>
+      <div class="facts" id="facts"></div>
+    </section>
+
+    <div id="heroWrap">
+      <section class="hero" id="hero">
+        <div class="kicker"><span class="live" aria-hidden="true"></span><span id="heroKicker">Next train to Hayes &amp; Harlington</span></div>
+        <div id="heroBody">
+          <div class="skel-row" style="grid-template-columns:1fr"><div class="skeleton" style="height:64px;border-radius:16px"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card list" id="listCard">
+      <div class="list-head">
+        <h2 id="listTitle">Then</h2>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="link-btn" id="btnKeys" hidden>Add API key</button>
+          <button class="link-btn" id="btnShowAll" aria-pressed="false">Show all trains</button>
+        </div>
+      </div>
+      <ul class="deps" id="depList"></ul>
+      <div id="listState"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="dot" id="dot" aria-hidden="true"></span>
+    <span id="updated">Loading…</span>
+    <span class="grow"></span>
+    <button class="link-btn" id="btnPause" aria-pressed="false" style="font-size:.78rem">Pause updates</button>
+  </footer>
+
+  <p class="sr-only" role="status" aria-live="polite" id="announce"></p>
+</div>
+
+<div id="scrim" class="scrim" hidden></div>
+<aside id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <h2 id="sheetTitle">Settings</h2>
+  <p class="lede">Saved on this phone only. Nothing is uploaded anywhere.</p>
+
+  <h3>Alerts</h3>
+  <div class="field">
+    <span class="lbl"><b>Buzz me when the train is close</b><span>Vibrates and flashes once the next train is within your warning time.</span></span>
+    <label class="switch"><input type="checkbox" id="optAlerts"><i></i></label>
+  </div>
+  <div class="field">
+    <span class="lbl"><b>Warn me this far ahead</b><span>Minutes before it arrives.</span></span>
+    <select class="txt" id="optAlertMins" style="width:110px"><option>1</option><option>2</option><option>3</option><option>5</option></select>
+  </div>
+
+  <h3>Location</h3>
+  <div class="field">
+    <span class="lbl"><b>Use my location</b><span>Works out which of the two stations you are standing at, and sets the direction for you. Only while this app is open.</span></span>
+    <label class="switch"><input type="checkbox" id="optGeo"><i></i></label>
+  </div>
+  <div class="stack">
+    <p class="fine" id="geoState">Not asked yet.</p>
+    <div class="row"><button class="btn" id="btnGeoNow">Check again</button></div>
+  </div>
+
+  <h3>Updates</h3>
+  <div class="field">
+    <span class="lbl"><b>Refresh every 20 seconds</b><span>Switch off if your signal is poor; refresh by hand instead.</span></span>
+    <label class="switch"><input type="checkbox" id="optAuto"><i></i></label>
+  </div>
+  <div class="field">
+    <span class="lbl"><b>Show trains that miss this station</b><span>Everything else on the line, greyed out, with the reason.</span></span>
+    <label class="switch"><input type="checkbox" id="optShowAll"><i></i></label>
+  </div>
+  <div class="field">
+    <span class="lbl"><b>Appearance</b><span>Follows the phone unless you pick one.</span></span>
+    <select class="txt" id="optTheme" style="width:130px"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select>
+  </div>
+
+  <h3>TfL data</h3>
+  <div class="stack">
+    <p class="fine" id="keyState">Checking whether live data works without a key…</p>
+    <label class="fine" for="optAppId">app_id</label>
+    <input class="txt" id="optAppId" type="text" autocomplete="off" spellcheck="false" placeholder="from api.tfl.gov.uk (optional)">
+    <label class="fine" for="optAppKey">app_key</label>
+    <input class="txt" id="optAppKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api.tfl.gov.uk (optional)">
+    <div class="row">
+      <button class="btn primary" id="btnSaveKeys">Save key</button>
+      <button class="btn" id="btnTestData">Test</button>
+    </div>
+    <p class="fine">Free registration at <a href="https://api.tfl.gov.uk/-register" target="_blank" rel="noopener">api.tfl.gov.uk</a>. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
+  </div>
+
+  <h3>If you want a look with no signal</h3>
+  <div class="field">
+    <span class="lbl"><b>Sample departures</b><span>Pretend times for trying the layout. Always labelled on screen.</span></span>
+    <label class="switch"><input type="checkbox" id="optDemo"><i></i></label>
+  </div>
+  <div class="stack">
+    <div class="row"><button class="btn" id="btnReset">Clear saved data</button></div>
+    <p class="fine" id="homeTip">Tip: use your browser’s <b>Add to Home screen</b> (or <b>Add to Home Screen</b> on iPhone) to get this as an app icon that opens straight on the direction you use most.</p>
+  </div>
+</aside>
+
+<noscript><p style="padding:20px">This page needs JavaScript to fetch live TfL departures.</p></noscript>
+
+<script>
+"use strict";
+/* ============================================================
+   Elizabeth line · Tottenham Court Road ⇄ Hayes & Harlington
+   One file, no build, no tracking. Data: api.tfl.gov.uk
+   ============================================================ */
+
+const API = "https://api.tfl.gov.uk";
+const LINE = "elizabeth";
+const NS = "elz.v1.";
+
+const STATIONS = {
+  tcr:   { label:"Tottenham Court Road", short:"Tottenham Court Road", abbr:"TCR",
+           match:/tottenham\s*court/i, fallback:["910GTOTCTRD","TCTFCRYRD","910GTOTCRD"] },
+  hayes: { label:"Hayes & Harlington",  short:"Hayes & Harlington",  abbr:"Hayes",
+           match:/hayes.*harlington|harlington.*hayes/i, fallback:["910GHAYESAH","HAYES&HL"] },
+};
+const ROUTES = {
+  "to-hayes": { from:"tcr",   to:"hayes", title:"Next train to Hayes & Harlington" },
+  "to-tcr":   { from:"hayes", to:"tcr",   title:"Next train to Tottenham Court Road" },
+};
+
+/* ---------- tiny helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(NS+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(NS+k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(NS+k); }catch(e){} },
+};
+const esc = (s) => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad2 = (n) => String(n).padStart(2,"0");
+const fmtClock = (d) => pad2(d.getHours())+":"+pad2(d.getMinutes());
+const clamp = (n,a,b) => Math.max(a, Math.min(b,n));
+const cleanPlat = (v) => String(v==null?"":v).replace(/^\s*(platform|plat\.?|p)\s*/i,"").trim();
+
+function cleanDest(name){
+  return String(name||"")
+    .replace(/\s+Rail Station$/i,"")
+    .replace(/^London\s+/i,"")
+    .replace(/^Heathrow Airport\s+/i,"Heathrow ")
+    .trim();
+}
+
+class ApiError extends Error{
+  constructor(kind, status, message){ super(message||"Request failed"); this.kind=kind; this.status=status; }
+}
+
+/* ---------- settings ---------- */
+const defaults = { theme:"auto", auto:true, showAll:false, alerts:false, alertMins:2, demo:false, geoOn:true,
+                   appId:"", appKey:"", refreshMs:20000 };
+let settings = Object.assign({}, defaults, store.get("settings", {}));
+function saveSettings(){ store.set("settings", settings); }
+
+/* ---------- app state ---------- */
+const state = {
+  route: store.get("route", "to-hayes"),
+  nodes:null, names:null,           // line graph: id -> [next ids], id -> name
+  coords:store.get("coords", {}),   // naptan id -> [lat, lon], remembered from TfL's own route data
+  graphAt:0,
+  ids:{},                           // {tcr:'910G…', hayes:'910G…'}
+  arrivals:[], status:null,
+  fetchedAt:0, serverSkew:0, error:null, needsKeys:false,
+  timer:null, tickTimer:null, nextRefreshAt:0,
+  alertedFor:null, lastAnnounce:-1, stale:false,
+};
+if(!ROUTES[state.route]) state.route = "to-hayes";
+const otherKey = () => ROUTES[state.route].to;
+const originKey = () => ROUTES[state.route].from;
+
+/* ---------- theme ---------- */
+const mqDark = matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(){
+  const resolved = settings.theme==="auto" ? (mqDark.matches ? "dark":"light") : settings.theme;
+  document.documentElement.dataset.theme = resolved;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", resolved==="dark" ? "#0d0c12" : "#6600cc");
+}
+mqDark.addEventListener("change", () => { if(settings.theme==="auto") applyTheme(); });
+
+/* ============================================================
+   Where am I?
+   One job: decide which of the two stations the user is standing
+   at, so the direction sets itself.  Uses the native Android
+   location plugin when running inside the app, and the browser's
+   geolocation anywhere else.  Only ever while the app is visible.
+   ============================================================ */
+const NEAR_METRES  = 600;        // inside this, we are willing to say "you are here"
+const SWITCH_MARGIN= 180;        // the other station must be clearly worse before we flip
+const MANUAL_HOLD  = 10*60e3;    // a direction you tapped by hand is left alone this long
+const GEO_OPTS     = { enableHighAccuracy:false, maximumAge:20000, timeout:15000,
+                      interval:15000, minimumUpdateInterval:10000 };   // last two: Android only
+
+const Native     = (window.Capacitor && window.Capacitor.Plugins) ? window.Capacitor.Plugins : null;
+const NativeGeo  = Native && Native.Geolocation ? Native.Geolocation : null;
+const isNativeApp = () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+const geo = {
+  pos:null, at:0, accuracy:0, error:null,
+  state:"idle",        // idle | prompt | ok | denied | unsupported | error
+  verdict:null,        // near | far | held | unknown
+  manualUntil:0, watch:null, watchId:null,
+};
+
+function haversine(a, b){
+  const R = 6371000, rad = (x) => x*Math.PI/180;
+  const dLat = rad(b[0]-a[0]), dLon = rad(b[1]-a[1]);
+  const h = Math.sin(dLat/2)**2 + Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function fmtDist(m){ return m < 950 ? (Math.round(m/10)*10) + " m" : (m/1000).toFixed(1) + " km"; }
+
+/* coordinates for the two stations we care about, straight from TfL's route data */
+function stationCoords(){
+  const out = {};
+  for(const key of Object.keys(STATIONS)){
+    const c = (state.coords||{})[state.ids[key]];
+    if(c && c.length === 2 && isFinite(c[0]) && isFinite(c[1])) out[key] = [Number(c[0]), Number(c[1])];
+  }
+  return out;
+}
+
+function nearestStation(){
+  const c = stationCoords();
+  if(!geo.pos || !c.tcr || !c.hayes) return null;
+  const d = { tcr:haversine(geo.pos, c.tcr), hayes:haversine(geo.pos, c.hayes) };
+  const key = d.tcr <= d.hayes ? "tcr" : "hayes";
+  const other = key === "tcr" ? "hayes" : "tcr";
+  return { key, other, metres:d[key], otherMetres:d[other], route: key === "tcr" ? "to-hayes" : "to-tcr" };
+}
+
+function geoErrorState(e){
+  const m = (e && (e.message || e.code)) ? String(e.message || e.code) : String(e);
+  return (/denied|permission|denied|PERMISSION|code.?1|User denied/i.test(m)) ? "denied" : "error";
+}
+
+async function askGeoPermission(){
+  if(!settings.geoOn) return "off";
+  if(NativeGeo){
+    try{
+      const r = await NativeGeo.requestPermissions();
+      const st = r && (r.location === "granted" ? r.location : r.coarseLocation);
+      geo.state = st === "granted" ? "ok" : "denied";
+      if(geo.state === "denied") geo.error = "Location permission refused on the phone.";
+      return geo.state;
+    }catch(e){ geo.state = "error"; geo.error = String(e && e.message || e); return "error"; }
+  }
+  if(!navigator.geolocation){ geo.state = "unsupported"; return "unsupported"; }
+  try{
+    if(navigator.permissions){
+      const p = await navigator.permissions.query({ name:"geolocation" });
+      geo.state = p.state === "granted" ? "ok" : p.state === "denied" ? "denied" : "prompt";
+      p.onchange = () => { geo.state = p.state === "granted" ? "ok" : p.state === "denied" ? "denied" : "prompt"; renderGeo(); };
+    }
+    return geo.state;
+  }catch(e){ return "prompt"; }
+}
+
+function readPositionOnce(){
+  return new Promise((resolve, reject) => {
+    if(NativeGeo){ NativeGeo.getCurrentPosition(GEO_OPTS).then(resolve, reject); return; }
+    if(!navigator.geolocation){ reject(new Error("No location support here.")); return; }
+    navigator.geolocation.getCurrentPosition(resolve, reject, GEO_OPTS);
+  });
+}
+
+function onPosition(p){
+  const c = p && p.coords;
+  if(!c || !isFinite(c.latitude) || !isFinite(c.longitude)){
+    // a PositionError (refused, timed out) or something unusable from the phone
+    if(!p) return;
+    geo.state = geoErrorState(p);
+    geo.error = (p.message) ? p.message : (p.code ? "The phone would not give a position (code " + p.code + ")." : "The phone gave a position that makes no sense.");
+    renderGeo(); syncSheet();
+    return;
+  }
+  geo.pos = [c.latitude, c.longitude];
+  geo.accuracy = c.accuracy || 0;
+  geo.at = Date.now();
+  geo.error = null; geo.state = "ok";
+  const n = nearestStation();
+  maybeAutoRoute(n);
+  renderGeo(); renderJourney(); syncSheet();
+}
+
+function maybeAutoRoute(n){
+  if(!settings.geoOn){ geo.verdict = null; return; }
+  if(!n){ geo.verdict = "unknown"; return; }
+  if(n.metres > NEAR_METRES){ geo.verdict = "far"; return; }
+  geo.verdict = "near";
+  if(state.route === n.route) return;
+  if(Date.now() < geo.manualUntil){ geo.verdict = "held"; return; }
+  if(n.otherMetres - n.metres < SWITCH_MARGIN) return;   // too close to call, leave it alone
+  setRoute(n.route);
+  $("announce").textContent = `At ${STATIONS[n.key].label}. Now showing trains to ${STATIONS[n.other].label}.`;
+}
+
+function geoFail(e){
+  geo.state = geoErrorState(e);
+  geo.error = (e && e.message) ? e.message : String(e);
+  renderGeo(); syncSheet();
+}
+
+function startGeoWatch(){
+  stopGeoWatch();
+  if(!settings.geoOn) return;
+  if(NativeGeo){
+    NativeGeo.watchPosition(GEO_OPTS, onPosition)
+      .then(id => { geo.watchId = id; })
+      .catch(e => { geo.watch = null; pollGeoOnce(); });
+    return;
+  }
+  if(navigator.geolocation){
+    geo.watch = navigator.geolocation.watchPosition(onPosition, geoFail, GEO_OPTS);
+    pollGeoOnce();
+    return;
+  }
+  geo.state = "unsupported"; renderGeo();
+}
+
+function stopGeoWatch(){
+  if(geo.watch !== null && geo.watch !== undefined && navigator.geolocation){
+    try{ navigator.geolocation.clearWatch(geo.watch); }catch(e){}
+    geo.watch = null;
+  }
+  if(NativeGeo && geo.watchId !== null && geo.watchId !== undefined){
+    try{ NativeGeo.clearWatch({ callbackId: geo.watchId }); }catch(e){}
+    geo.watchId = null;
+  }
+}
+
+async function pollGeoOnce(){
+  if(!settings.geoOn) return;
+  try{
+    if(geo.state === "idle" || geo.state === "prompt"){
+      const st = await askGeoPermission();
+      if(st === "denied" || st === "unsupported" || st === "off"){ renderGeo(); return; }
+    }
+    onPosition(await readPositionOnce());
+  }catch(e){ geoFail(e); }
+}
+
+function geoStatusLine(){
+  if(!settings.geoOn) return "Location is off. The two buttons set the direction instead.";
+  if(geo.state === "denied") return "Your phone is refusing location. Allow it in Settings › Apps › this app › Location, or pick the direction by hand.";
+  if(geo.state === "unsupported") return "This browser will not share location with the page.";
+  if(geo.state === "error") return "Location failed: " + (geo.error || "unknown reason") + ". The buttons still work.";
+  if(!geo.pos) return isNativeApp() ? "Waiting for a GPS fix…" : "Waiting for the browser to share your position…";
+  const n = nearestStation();
+  const when = "last fix " + fmtClock(new Date(geo.at));
+  if(!n) return "Position known (" + when + "), but TfL's station coordinates are not cached yet.";
+  return `Position known to about ${fmtDist(geo.accuracy)}, ${when}. Nearest station: ${STATIONS[n.key].label}, ${fmtDist(n.metres)}.`;
+}
+
+function renderGeo(){
+  const line = $("geoLine"), txt = $("geoText");
+  if(!line) return;
+  line.classList.toggle("on", !!settings.geoOn && geo.state === "ok" && geo.verdict === "near");
+  const n = nearestStation();
+  if(!settings.geoOn){
+    txt.innerHTML = "Location is off — <b>tap to switch on</b>";
+    line.title = "Turn on location";
+    line.dataset.act = "on"; return;
+  }
+  if(geo.state === "denied" || geo.state === "unsupported"){
+    txt.textContent = "Location unavailable — pick the direction below";
+    line.dataset.act = "none"; return;
+  }
+  if(!geo.pos){
+    txt.textContent = "Working out which station you are at…";
+    line.dataset.act = "refresh"; return;
+  }
+  if(!n){
+    txt.textContent = "Location known, station coordinates still loading";
+    line.dataset.act = "refresh"; return;
+  }
+  line.dataset.act = "refresh";
+  if(geo.verdict === "held"){
+    txt.innerHTML = `At <b>${esc(STATIONS[n.key].label)}</b> · keeping the direction you chose`;
+  }else if(geo.verdict === "far" || !n){
+    txt.innerHTML = `Neither station is close · <b>${fmtDist(n.metres)}</b> to ${esc(STATIONS[n.key].abbr)}`;
+  }else{
+    txt.innerHTML = `At <b>${esc(STATIONS[n.key].label)}</b> · ${fmtDist(n.metres)} away`;
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) stopGeoWatch();
+  else if(settings.geoOn) startGeoWatch();
+});
+
+/* ============================================================
+   Network
+   ============================================================ */
+async function getJSON(path, params, opts){
+  opts = opts || {};
+  const url = new URL(API + path);
+  Object.entries(params||{}).forEach(([k,v]) => url.searchParams.set(k, v));
+  if(settings.appId) url.searchParams.set("app_id", settings.appId);
+  if(settings.appKey) url.searchParams.set("app_key", settings.appKey);
+
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), opts.timeout || 15000);
+  let res;
+  try{
+    res = await fetch(url.href, { signal:ctrl.signal, cache:"no-store", headers:{ Accept:"application/json" } });
+  }catch(err){
+    throw new ApiError("network", 0, err && err.name==="AbortError" ? "Timed out waiting for TfL." : "No connection to TfL.");
+  }finally{ clearTimeout(to); }
+
+  if(res.status===401 || res.status===403){
+    throw new ApiError("keys", res.status, "TfL wants an app_id and app_key for this.");
+  }
+  if(!res.ok){
+    let msg = "";
+    try{ const j = await res.json(); msg = j && (j.message || j.httpStatus); }catch(e){}
+    throw new ApiError("http", res.status, msg || ("TfL replied " + res.status));
+  }
+  return res.json();
+}
+
+/* ============================================================
+   Line graph  (which stop comes after which)
+   Cached: the railway rarely changes.
+   ============================================================ */
+async function loadGraph(force){
+  const cached = store.get("graph", null);
+  const fresh = cached && (Date.now() - cached.at) < 12*3600e3;
+  if(cached && (fresh || !force)){
+    state.nodes = cached.nodes; state.names = cached.names; state.graphAt = cached.at;
+    state.coords = Object.assign({}, store.get("coords",{}), cached.coords||{});
+    if(fresh) return "cache";
+  }
+  const nodes = {}, names = {}, coords = {};
+  let ok = 0, err = null;
+  for(const dir of ["inbound","outbound"]){
+    try{
+      const seq = await getJSON(`/Line/${LINE}/Route/Sequence/${dir}`);
+      (seq.stopPointSequences||[]).forEach(sp => {
+        const pts = sp.stopPoint||[];
+        pts.forEach(p => {
+          if(p.id && p.name) names[p.id] = p.name;
+          if(p.id && isFinite(p.lat) && isFinite(p.lon)) coords[p.id] = [Number(p.lat), Number(p.lon)];
+        });
+        for(let i=0;i<pts.length-1;i++){
+          if(!pts[i].id || !pts[i+1].id) continue;
+          nodes[pts[i].id] = nodes[pts[i].id] || [];
+          if(!nodes[pts[i].id].includes(pts[i+1].id)) nodes[pts[i].id].push(pts[i+1].id);
+        }
+      });
+      ok++;
+    }catch(e){ err = e; }
+  }
+  if(ok === 0){
+    if(cached){
+      state.nodes = cached.nodes; state.names = cached.names; state.graphAt = cached.at;
+      state.coords = Object.assign({}, store.get("coords",{}), cached.coords||{});
+      return "cache-stale";
+    }
+    throw err || new ApiError("http", 0, "Could not read the Elizabeth line route.");
+  }
+  state.nodes = nodes; state.names = names; state.graphAt = Date.now();
+  state.coords = Object.assign({}, state.coords, coords);
+  store.set("graph", { at:state.graphAt, nodes, names, coords });
+  store.set("coords", state.coords);      // kept on its own so location still works offline
+  return "live";
+}
+
+/* shortest walk from a to b along the line */
+function pathBetween(a, b){
+  if(!state.nodes || !a || !b) return null;
+  if(a === b) return [a];
+  const prev = { [a]:null };
+  const q = [a];
+  for(let head=0; head<q.length; head++){
+    const n = q[head];
+    if(n === b) break;
+    for(const m of (state.nodes[n]||[])){
+      if(prev[m] === undefined){ prev[m] = n; q.push(m); }
+    }
+  }
+  if(prev[b] === undefined) return null;
+  const out = []; let cur = b;
+  while(cur !== null && cur !== undefined){ out.push(cur); cur = prev[cur]; }
+  return out.reverse();
+}
+function idForName(name){
+  if(!name || !state.names) return null;
+  const want = cleanDest(name).toLowerCase();
+  const keys = Object.keys(state.names);
+  let hit = keys.find(id => cleanDest(state.names[id]).toLowerCase() === want);
+  if(hit) return hit;
+  const loose = want.replace(/[^a-z0-9]/g,"");
+  return keys.find(id => state.names[id] && cleanDest(state.names[id]).toLowerCase().replace(/[^a-z0-9]/g,"") === loose) || null;
+}
+
+/* Which TfL stop point should we ask about for each station? */
+function resolveIds(){
+  for(const [key, def] of Object.entries(STATIONS)){
+    const cached = store.get("id."+key, null);
+    const cachedGood = cached && state.names && def.match.test(state.names[cached] || "");
+    if(cachedGood){ state.ids[key] = cached; continue; }
+    let picked = null;
+    if(state.names){
+      picked = Object.keys(state.names).find(id => def.match.test(state.names[id] || "")) || null;
+    }
+    if(!picked){
+      // fall back to any ids recorded for this browser, then the known ones
+      picked = store.get("id."+key, null) || def.fallback[0];
+    }
+    state.ids[key] = picked;
+    store.set("id."+key, picked);
+  }
+}
+
+/* ============================================================
+   Departures
+   ============================================================ */
+async function loadArrivals(){
+  const key = originKey();
+  const id = state.ids[key];
+  if(!id) throw new ApiError("http", 0, "Could not find "+STATIONS[key].label+" on the Elizabeth line.");
+  const raw = await getJSON(`/Line/${LINE}/Arrivals/${encodeURIComponent(id)}`, { count:"45" });
+  if(!Array.isArray(raw)) throw new ApiError("http", 0, "Unexpected reply from TfL.");
+
+  // Rough clock correction so a wrong phone clock does not ruin the countdowns.
+  const sent = raw.find(a => a.timing && a.timing.sent && a.timing.sent > "2000-01-01");
+  if(sent && Math.abs(Date.parse(sent.timing.sent) - Date.now()) < 10*60e3){
+    state.serverSkew = Date.parse(sent.timing.sent) - Date.now();
+  }
+  state.arrivals = raw;
+  state.fetchedAt = Date.now();
+  state.stale = false;
+  if(raw.length){ store.set("id."+key, id); store.del("triedAlt."+key); }   // remember what worked
+  store.set("snapshot."+state.route, { at:Date.now(), arrivals:raw.slice(0,40), status:state.status });
+}
+
+async function loadStatus(){
+  try{
+    const s = await getJSON(`/Line/${LINE}/Status`);
+    const first = Array.isArray(s) && s[0] && (s[0].lineStatuses||[])[0];
+    state.status = first || null;
+  }catch(e){ state.status = null; }
+}
+
+/* TfL's own direction tag, used only as a fallback when the route graph
+   cannot place a destination: westbound out of Tottenham Court Road is
+   "outbound", eastbound out of Hayes & Harlington is "inbound". */
+const DIRECTION_HINT = { "to-hayes":"outbound", "to-tcr":"inbound" };
+function assess(a){
+  const targetId = state.ids[otherKey()], originId = state.ids[originKey()];
+  const guess = { verdict: a.direction === DIRECTION_HINT[state.route] ? "dir" : "no", stopsToTarget:null, path:null };
+  const destId = a.destinationNaptanId || idForName(a.destinationName);
+  if(!destId || !originId || !targetId || !state.nodes) return guess;
+  let path = pathBetween(originId, destId);
+  if(!path){
+    const byName = idForName(a.destinationName);   // destination we cannot place on the line
+    if(byName) path = pathBetween(originId, byName);
+  }
+  if(!path) return guess;
+  const idx = path.indexOf(targetId);
+  if(idx > 0) return { verdict:"stop", stopsToTarget:idx, path };
+  if(idx === 0) return guess;
+  return { verdict:"no", stopsToTarget:null, path };
+}
+const isGood = (d) => d.verdict === "stop" || d.verdict === "dir";
+
+function decorate(list){
+  const now = Date.now() + state.serverSkew;
+  const out = [];
+  const seen = new Set();
+  for(const a of list){
+    if(!a || a.lineId !== LINE) continue;
+    const eta = Date.parse(a.expectedArrival || a.aimedArrival || "");
+    if(!eta || isNaN(eta)) continue;
+    const live = Date.parse(a.currentTimeToLive || a.timeToLive || "");
+    if(live && !isNaN(live) && now > live + 60e3) continue;     // gone stale
+    if(now > eta + 150e3) continue;                              // already and gone
+    const id = [a.destinationNaptanId || a.destinationName, a.platformName, eta].join("|");
+    if(seen.has(id)) continue; seen.add(id);
+    const verdict = assess(a);
+    out.push({
+      id, eta, minutes:(eta - now)/60000,
+      destination:cleanDest(a.destinationName) || "—",
+      platform:cleanPlat(a.platformName),
+      destinationNaptanId:a.destinationNaptanId || "",
+      verdict:verdict.verdict, stopsToTarget:verdict.stopsToTarget, path:verdict.path,
+    });
+  }
+  out.sort((x,y) => x.eta - y.eta);
+  return out;
+}
+
+/* ============================================================
+   Sample data (opt-in, clearly labelled)
+   ============================================================ */
+function sampleArrivals(){
+  const originId = state.ids[originKey()], targetId = state.ids[otherKey()];
+  const base = Date.now() + state.serverSkew;
+  const dirOf = state.route === "to-hayes" ? "outbound" : "inbound";
+  const mk = (id, name, mins, plat, dir) => ({
+    lineId:LINE, naptanId:originId, destinationNaptanId:id, destinationName:name, direction:dir||dirOf,
+    platformName:plat, expectedArrival:new Date(base + mins*60000).toISOString(),
+    timeToLive:new Date(base + (mins+20)*60000).toISOString(),
+  });
+  const good = [], bad = [];
+  if(state.names && originId && targetId){
+    const onTheWay = new Set((pathBetween(originId, targetId)||[]).slice(1));
+    for(const id of Object.keys(state.names)){
+      if(id === originId) continue;
+      if((state.nodes[id]||[]).length) continue;            // only real ends of the line
+      if(onTheWay.has(id) && id !== targetId) continue;      // not a station on the way
+      const p = pathBetween(originId, id);
+      if(!p || p.length < 3 || p.length > 24) continue;
+      (p.indexOf(targetId) > 0 ? good : bad).push({ id, name:state.names[id], len:p.length });
+    }
+  }
+  const pick = (arr, n) => arr.sort((a,b) => a.len - b.len).slice(0, n);
+  const g = pick(good, 4), b = pick(bad, 2);
+  const out = [];
+  const plats = state.route === "to-hayes" ? ["B","B","B","B"] : ["4","4","4","4"];
+  const step = [2, 6, 11, 17];
+  g.forEach((d, i) => out.push(mk(d.id, d.name, step[i] ?? (18+i*3), plats[i] || "1")));
+  b.forEach((d, i) => out.push(mk(d.id, d.name, [4, 9][i] ?? 14, "2", dirOf === "outbound" ? "inbound" : "outbound")));
+  if(!out.length){
+    const fallback = state.route === "to-hayes"
+      ? [["910GRDNGSTN","Reading Rail Station",3,"B"],["910GHTRWTM4","Heathrow Terminal 4 Rail Station",7,"B"],
+         ["910GMDNHEAD","Maidenhead Rail Station",13,"B"],["910GHTRWTM5","Heathrow Terminal 5 Rail Station",19,"B"],
+         ["910GSHENFLD","Shenfield Rail Station",5,"A"],["910GABWDXR","Abbey Wood",11,"A"]]
+      : [["910GSHENFLD","Shenfield Rail Station",4,"4"],["910GABWDXR","Abbey Wood",9,"4"],
+         ["910GGIDEAPK","Gidea Park Rail Station",15,"4"],["910GCANWHRF","Canary Wharf",22,"4"],
+         ["910GRDNGSTN","Reading Rail Station",6,"3"],["910GHTRWTM4","Heathrow Terminal 4 Rail Station",16,"3"]];
+    fallback.forEach(([id,name,m,p]) => out.push(mk(id, name, m, p)));
+  }
+  return out;
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+/* big number + small unit, the way a departure board reads */
+function heroCountdown(m, secs){
+  if(m < 1)   return { big:"Due",  small:"" };
+  if(m < 10)  return { big:String(Math.floor(m)), small:pad2(secs%60)+"s" };
+  if(m < 60)  return { big:String(Math.floor(m)), small:"min" };
+  return { big:Math.floor(m/60)+"h"+pad2(Math.round(m%60)), small:"" };
+}
+
+function minsLabel(m){
+  if(m <= -0.2) return { big:"Due", small:"" };
+  if(m < 1) return { big:"Due", small:"" };
+  if(m < 60) return { big:String(Math.floor(m)), small:"min" };
+  const h = Math.floor(m/60), mm = Math.round(m % 60);
+  return { big:h+"h"+pad2(mm), small:"" };
+}
+
+function renderJourney(){
+  const r = ROUTES[state.route];
+  const from = STATIONS[r.from], to = STATIONS[r.to];
+  document.querySelectorAll(".seg").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.dir === state.route)));
+  $("stripFrom").textContent = from.abbr;
+  $("stripTo").textContent = to.abbr;
+  $("routeStrip").classList.toggle("rev", state.route === "to-tcr");
+  $("heroKicker").textContent = r.title;
+  document.title = `Oli Commuter · next train to ${to.label}`;
+
+  // usual platform for the trains that qualify
+  const good = decorate(state.arrivals).filter(d => isGood(d) && d.platform);
+  const tally = {};
+  good.forEach(d => tally[d.platform] = (tally[d.platform]||0)+1);
+  const plat = Object.keys(tally).sort((a,b) => tally[b]-tally[a])[0];
+  const path = state.ids[r.from] && state.ids[r.to] ? pathBetween(state.ids[r.from], state.ids[r.to]) : null;
+  const facts = [];
+  const soon = decorate(state.arrivals).filter(d => isGood(d) && d.minutes >= 0 && d.minutes <= 60).length;
+  if(soon) facts.push(`<span class="fact"><b>${soon}</b> in the next hour</span>`);
+  if(plat) facts.push(`<span class="fact">Usually <b>platform ${esc(plat)}</b></span>`);
+  facts.push(`<span class="fact">Direct · <b>no changes</b></span>`);
+  if(settings.demo) facts.push(`<span class="fact" style="color:var(--warn)">Sample data</span>`);
+  $("facts").innerHTML = facts.join("");
+}
+
+function renderHero(){
+  const list = decorate(state.arrivals);
+  const good = list.filter(isGood);
+  const next = good[0];
+  const body = $("heroBody");
+  const hero = $("hero");
+
+  // nothing on screen at all: say what went wrong instead of pretending the line is empty
+  if(!list.length && state.error){
+    hero.classList.remove("due");
+    hero.classList.add("is-error");
+    const keys = state.error.kind === "keys";
+    const offline = state.error.kind === "network";
+    body.innerHTML = `
+      <div class="to">${keys ? "TfL wants a free API key" : offline ? "No signal to TfL" : "Could not read the live board"}</div>
+      <div class="via">${keys
+          ? "TfL’s live boards need a free <b>app_id</b> and <b>app_key</b>. Register at api.tfl.gov.uk, then paste them in Settings — they stay on this phone."
+          : offline
+            ? "Turn off airplane mode or move somewhere with signal, then try again. Departures you saw earlier are kept on this phone."
+            : esc(state.error.message || "Something went wrong talking to TfL.")}</div>
+      <div class="meta">
+        <button class="chip plat" id="heroRetry" style="cursor:pointer;border:0">${keys ? "Add key" : "Try again"}</button>
+        <button class="chip" id="heroSettings" style="cursor:pointer;border:1px solid rgba(255,255,255,.3)">Settings</button>
+      </div>`;
+    $("heroRetry").addEventListener("click", () => keys ? openSheet() : refresh(true));
+    $("heroSettings").addEventListener("click", openSheet);
+    $("barTitle").classList.remove("compact");
+    $("barSub").textContent = keys ? "needs a TfL API key" : offline ? "no signal" : "no live data";
+    return;
+  }
+
+  if(!next){
+    hero.classList.remove("due");
+    body.innerHTML = `<div class="to">No train found that stops at ${esc(STATIONS[otherKey()].label)}</div>
+      <div class="via">None of the next 45 departures on TfL’s feed reaches that station. Turn on “${settings.showAll?"Hide":"Show"} trains that miss this station” to see what is running, or check the line status above — engineering works and part closures do cause this.</div>`;
+    $("barTitle").classList.remove("compact");
+    $("barSub").textContent = "Nothing direct in the next hour";
+    return;
+  }
+  hero.classList.remove("is-error");
+  const m = next.minutes;
+  const secs = clamp(Math.round((next.eta - (Date.now()+state.serverSkew))/1000), 0, 3599);
+  const lab = heroCountdown(m, secs);
+  hero.classList.toggle("due", m <= 1 && m > -2);
+  const clock = new Date(next.eta - state.serverSkew);
+  const stopWord = next.stopsToTarget === 1 ? "stop" : "stops";
+  const rPath = routePath();
+  const rNames = rPath ? rPath.slice(1,-1).map(id => cleanDest(state.names[id]||id)) : [];
+  const viaSummary = rPath && rPath.length > 2
+    ? `${rPath.length-1} stops · via ${rNames.slice(0,3).join(", ")}${rNames.length>3 ? " …" : ""}`
+    : "";
+  body.innerHTML = `
+    <div class="when">
+      <div class="cd">${esc(lab.big)}${lab.small?`<small>${esc(lab.small)}</small>`:""}</div>
+      <div class="clock">${fmtClock(clock)}</div>
+    </div>
+    <div class="to">${esc(next.destination)}${next.platform?`<span class="chip plat">Platform ${esc(next.platform)}</span>`:""}</div>
+    <div class="meta">
+      ${state.stale ? `<span class="chip">Remembered ${fmtClock(new Date(state.fetchedAt))} · not live</span>` : ""}
+      ${next.verdict === "stop"
+        ? `<span class="chip">Calls at ${esc(STATIONS[otherKey()].label)}</span>`
+        : `<span class="chip">Heading the right way · could not confirm it calls</span>`}
+      ${next.stopsToTarget?`<span class="chip">~${next.stopsToTarget} ${stopWord} away</span>`:""}
+    </div>
+    <details class="via-box" id="heroViaBox"><summary>${viaSummary}</summary><div class="via" id="heroVia"></div></details>`;
+  renderJourneyViaOnly();
+
+  $("barTitle").classList.add("compact");
+  $("barSub").textContent = heroBarText(lab, next);
+  hero.dataset.depId = next.id;
+}
+
+function routePath(){
+  const r = ROUTES[state.route];
+  return state.ids[r.from] && state.ids[r.to] ? pathBetween(state.ids[r.from], state.ids[r.to]) : null;
+}
+
+function renderJourneyViaOnly(){
+  const via = $("heroVia"), box = $("heroViaBox");
+  if(!via || !box) return;
+  const path = routePath();
+  if(!path || path.length < 3){ box.hidden = true; return; }
+  box.hidden = false;
+  const names = path.slice(1,-1).map(id => cleanDest(state.names[id]||id));
+  box.querySelector("summary").textContent = `${path.length-1} stops · via ${names.slice(0,3).join(", ")}${names.length>3 ? " …" : ""}`;
+  via.innerHTML = `${esc(STATIONS[originKey()].label)} → ${names.map(esc).join(" → ")} → <b>${esc(STATIONS[otherKey()].label)}</b>`;
+}
+
+function depRow(d, isOther){
+  const lab = minsLabel(d.minutes);
+  const nowClass = d.minutes <= 1 ? " now" : "";
+  let badge, sub;
+  if(d.verdict === "stop"){
+    badge = `<span class="badge stop">Stops ✓</span>`;
+    sub = d.stopsToTarget ? `${d.stopsToTarget} stops to go` : "Direct";
+  }else if(d.verdict === "dir"){
+    badge = `<span class="badge stop">Stops ✓</span>`;
+    sub = `Right direction · TfL does not say where it stops`;
+  }else if(d.verdict === "no"){
+    badge = `<span class="badge no">Misses</span>`;
+    sub = `Does not reach ${esc(STATIONS[otherKey()].label)}`;
+  }else{
+    badge = `<span class="badge q">Check</span>`;
+    sub = `Cannot confirm from TfL’s data`;
+  }
+  return `<li><div class="dep${isOther?" other":""}${nowClass}${isOther?" hasbadge":""}" data-eta="${d.eta}" data-id="${esc(d.id)}">
+      <div class="mins">${esc(lab.big)}${lab.small?`<small>${esc(lab.small)}</small>`:""}</div>
+      <div class="mid">
+        <div class="dest">${esc(d.destination)}</div>
+        <div class="sub">${d.platform?`Platform ${esc(d.platform)} · `:""}${sub} · ${fmtClock(new Date(d.eta - state.serverSkew))}</div>
+      </div>
+      ${isOther?`<div>${badge}</div>`:""}
+    </div></li>`;
+}
+
+function heroBarText(lab, next){
+  const when = lab.big === "Due" ? "due now"
+    : lab.big.includes("h") ? `in ${lab.big}`
+    : lab.big.includes(" ") ? `in ${lab.big}`
+    : `in ${lab.big} min`;
+  return `${when} · ${next.destination}${next.platform?" · platform "+next.platform:""}`;
+}
+
+function renderList(){
+  const all = decorate(state.arrivals);
+  $("listCard").style.display = all.length ? "" : "none";
+  const good = all.filter(isGood);
+  const rest = all.filter(d => !isGood(d));
+  const shown = good.slice(1, 12);
+  $("listTitle").textContent = good.length > 1 ? "Then" : "Later trains";
+
+  $("depList").innerHTML = shown.map(d => depRow(d, false)).join("");
+
+  const st = $("listState");
+  if(!all.length){
+    st.innerHTML = "";
+  }else if(settings.showAll && rest.length){
+    st.innerHTML = `<details class="more" id="moreBox" ${store.get("moreOpen",false)?"open":""}>
+      <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg>
+      ${rest.length} other train${rest.length>1?"s":""} on the line that ${rest.length>1?"do":"does"} not stop at ${esc(STATIONS[otherKey()].label)}</summary>
+      <ul class="deps">${rest.slice(0,14).map(d => depRow(d, true)).join("")}</ul></details>`;
+    const box = $("moreBox");
+    if(box) box.addEventListener("toggle", () => store.set("moreOpen", box.open));
+  }else if(rest.length){
+    st.innerHTML = `<p class="fine" style="padding:10px 0 0">${rest.length} other train${rest.length>1?"s":""} on the line right now ${rest.length>1?"do":"does"} not stop at ${esc(STATIONS[otherKey()].label)} — use “Show all trains” above to see them.</p>`;
+  }else{
+    st.innerHTML = "";
+  }
+}
+
+function renderStatus(){
+  const slot = $("bannerSlot");
+  const s = state.status;
+  if(!s){ slot.innerHTML = ""; return; }
+  const good = s.statusSeverity === 10 || s.statusSeverityDescription === "Good Service";
+  if(good){
+    slot.innerHTML = `<div class="banner" data-sev="good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg>
+      <div class="body"><b>Elizabeth line: Good Service</b></div></div>`;
+    return;
+  }
+  const sev = s.statusSeverity >= 6 ? "bad" : (s.statusSeverity >= 4 ? "warn" : "good");
+  const full = (s.reason || "").replace(/&#10;/g, " ").replace(/\s+/g, " ").trim();
+  const first = full.split(/(?<=[a-z0-9\)])[.!?](\s|$)/)[0].trim();
+  const head  = first.length > 104 ? first.slice(0,102).trim()+"…" : first;
+  const more  = full.length > head.length ? full.slice(head.length).trim() : "";
+  const affects = mentionsOurStations(full);
+  slot.innerHTML = `<div class="banner" data-sev="${sev}" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3.1L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <div class="body">
+        <b>${esc(s.statusSeverityDescription || "Disruption")}</b>${affects ? `<span class="affects"><span>on your route</span></span>` : ""}
+        <span class="why">${esc(head)}${head!==full && !more?"…":""}</span>
+        ${more ? `<details><summary>Read the rest</summary><div class="full">${esc(more)}</div></details>` : ""}
+      </div>
+      <button class="close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>`;
+  slot.querySelector(".close")?.addEventListener("click", () => { slot.innerHTML = ""; store.set("bannerSeen", s.statusSeverityDescription + "|" + full.slice(0,60)); });
+  if(store.get("bannerSeen", null) === (s.statusSeverityDescription + "|" + full.slice(0,60))) slot.innerHTML = "";
+}
+
+function mentionsOurStations(text){
+  if(!text) return false;
+  const r = ROUTES[state.route];
+  const path = state.ids[r.from] && state.ids[r.to] ? pathBetween(state.ids[r.from], state.ids[r.to]) : null;
+  if(!path) return false;
+  const hay = " " + text.toLowerCase() + " ";
+  return path.some(id => {
+    const n = cleanDest(state.names[id] || "");
+    if(n.length < 5) return false;
+    return hay.includes(" " + n.toLowerCase() + " ") || hay.includes(n.toLowerCase());
+  });
+}
+
+function renderFooter(){
+  const dot = $("dot"), upd = $("updated");
+  if(settings.demo){
+    dot.className = "dot"; upd.textContent = "Sample data · not live"; return;
+  }
+  if(state.error){
+    dot.className = "dot bad";
+    upd.textContent = (state.fetchedAt ? "Last good look " + fmtClock(new Date(state.fetchedAt)) + " · " : "") + state.error.message;
+    return;
+  }
+  dot.className = "dot ok";
+  const inNext = settings.auto && state.nextRefreshAt ? Math.max(0, Math.round((state.nextRefreshAt - Date.now())/1000)) : null;
+  upd.textContent = (state.fetchedAt ? `Live · updated ${fmtClock(new Date(state.fetchedAt))}` : "Waiting for TfL…")
+    + (inNext !== null ? ` · next in ${inNext}s` : "")
+    + (state.stale ? " · from memory" : "");
+}
+
+function renderAll(){
+  renderJourney();
+  renderHero();
+  renderList();
+  renderStatus();
+  renderFooter();
+  $("btnKeys").hidden = !state.needsKeys;
+}
+
+/* one second tick: countdowns only, no re-fetch */
+function tick(){
+  const now = Date.now() + state.serverSkew;
+  document.querySelectorAll("[data-eta]").forEach(el => {
+    const eta = Number(el.dataset.eta);
+    const lab = minsLabel((eta - now)/60000);
+    const box = el.querySelector(".mins");
+    if(box) box.innerHTML = esc(lab.big) + (lab.small?`<small>${esc(lab.small)}</small>`:"");
+    el.classList.toggle("now", (eta-now)/60000 <= 1);
+  });
+  if($("heroBody").querySelector(".cd")){
+    const all = decorate(state.arrivals);
+    const next = all.find(isGood);
+    if(next){
+      const m = next.minutes;
+      const secs = clamp(Math.round((next.eta - now)/1000), 0, 3599);
+      const lab = heroCountdown(m, secs);
+      const cd = $("heroBody").querySelector(".cd");
+      cd.innerHTML = esc(lab.big) + (lab.small?`<small>${esc(lab.small)}</small>`:"");
+      $("hero").classList.toggle("due", m <= 1 && m > -2);
+      $("barSub").textContent = heroBarText(lab, next);
+      if(Math.floor(m) !== state.lastAnnounce && m > -1){
+        state.lastAnnounce = Math.floor(m);
+        $("announce").textContent = `Next train to ${STATIONS[otherKey()].label}: ${next.destination}, ${lab.big==="Due"?"due now":"in "+lab.big+" minutes"}${next.platform?", platform "+next.platform:""}.`;
+      }
+      maybeAlert(next);
+    }
+  }
+  renderFooter();
+  if(!settings.auto || document.hidden) return;
+  if(state.nextRefreshAt && Date.now() >= state.nextRefreshAt) refresh();
+}
+
+function maybeAlert(next){
+  if(!settings.alerts) return;
+  const mins = next.minutes;
+  if(mins > settings.alertMins || mins < -1) return;
+  if(state.alertedFor === next.id) return;
+  state.alertedFor = next.id;
+  try{ navigator.vibrate && navigator.vibrate([220,90,220,90,340]); }catch(e){}
+  try{
+    if("Notification" in window && Notification.permission === "granted"){
+      new Notification(`Train in under ${settings.alertMins} min`, {
+        body:`${next.destination} for ${STATIONS[otherKey()].label}${next.platform?", platform "+next.platform:""}`,
+        tag:"next-elizabeth-train", silent:false
+      });
+    }
+  }catch(e){}
+  $("hero").animate?.([{transform:"scale(1)"},{transform:"scale(1.02)"},{transform:"scale(1)"}], {duration:600, iterations:2});
+  $("announce").textContent = `Heads up — ${next.destination} for ${STATIONS[otherKey()].label} arrives in under ${settings.alertMins} minutes.`;
+}
+
+/* ============================================================
+   Refresh loop
+   ============================================================ */
+async function refresh(manual){
+  if(state.loading) return;
+  state.loading = true;
+  $("btnRefresh").classList.add("spin");
+  try{
+    if(!state.nodes || !state.ids[originKey()] || !state.ids[otherKey()]){
+      await loadGraph(false);
+      resolveIds();
+      renderJourney();
+    }
+    const tasks = [loadArrivals()];
+    if(Date.now() - (state.statusAt||0) > 4*60e3 || !state.status){ tasks.push(loadStatus().then(()=> state.statusAt = Date.now())); }
+    await Promise.all(tasks);
+    state.error = null; state.needsKeys = false;
+  }catch(err){
+    state.error = err;
+    if(err.kind === "keys"){
+      state.needsKeys = true;
+      const snap = store.get("snapshot."+state.route, null);
+      if(snap && snap.arrivals){ state.arrivals = snap.arrivals; state.stale = true; }
+    }else if(err.kind === "network"){
+      const snap = store.get("snapshot."+state.route, null);
+      if(snap && snap.arrivals){ state.arrivals = snap.arrivals; state.stale = true; state.error = null; }
+    }else if(/not recognised|Cannot find|could not read/i.test(err.message||"")){
+      // station id may have changed: forget the cache and try once more, live
+      store.del("id."+originKey()); store.del("graph");
+      state.ids = {}; state.nodes = null;
+      try{
+        await loadGraph(true); resolveIds(); await loadArrivals();
+        state.error = null;
+      }catch(e2){ state.error = e2; }
+    }
+    // keep the board on screen, but say plainly that it is remembered rather than live
+    if(state.arrivals.length) state.stale = true;
+  }finally{
+    state.loading = false;
+    $("btnRefresh").classList.remove("spin");
+    state.nextRefreshAt = settings.auto ? Date.now() + settings.refreshMs : 0;
+    if(settings.demo){ state.arrivals = sampleArrivals(); state.fetchedAt = Date.now(); }
+    renderAll();
+    // station coordinates arrive with the TfL graph; once they are here the
+    // "which station am I at" answer can actually be worked out
+    if(geo.pos && (geo.verdict === null || geo.verdict === "unknown")){
+      maybeAutoRoute(nearestStation()); renderGeo(); syncSheet();
+    }
+    if(manual) { try{ navigator.vibrate && navigator.vibrate(15); }catch(e){} }
+  }
+  // empty list but station resolved: the id may be a parent id with no predictions
+  if(!state.error && state.arrivals.length === 0 && !settings.demo){
+    const key = originKey(), cached = store.get("id."+key, null);
+    const alt = STATIONS[key].fallback.find(f => f !== cached);
+    if(alt && !store.get("triedAlt."+key, false)){
+      store.set("triedAlt."+key, true); store.set("id."+key, alt); state.ids[key] = alt;
+      state.arrivals = []; await refresh();
+    }
+  }
+}
+
+function scheduleLoop(){
+  clearInterval(state.tickTimer);
+  state.tickTimer = setInterval(tick, 1000);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden){ clearInterval(state.timer); state.timer = null; return; }
+  tick();
+  if(settings.auto && (!state.nextRefreshAt || Date.now() - state.fetchedAt > settings.refreshMs)) refresh();
+});
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+settings.refreshMs = clamp(Number(settings.refreshMs)||20000, 10000, 300000);
+
+function setRoute(route, refetch){
+  if(!ROUTES[route]) return;
+  state.route = route; store.set("route", route);
+  state.alertedFor = null; state.lastAnnounce = -1;
+  try{ history.replaceState(null, "", "#"+route); }catch(e){ location.hash = route; }
+  $("heroBody").innerHTML = `<div class="skel-row" style="grid-template-columns:1fr"><div class="skeleton" style="height:64px;border-radius:16px"></div></div>`;
+  renderJourney();
+  const snap = store.get("snapshot."+route, null);
+  if(snap && snap.arrivals && (Date.now()-snap.at) < 90e3){ state.arrivals = snap.arrivals; state.fetchedAt = snap.at; state.stale = true; renderAll(); }
+  if(refetch !== false) refresh();
+}
+
+document.querySelectorAll(".seg").forEach(b => b.addEventListener("click", () => {
+  geo.manualUntil = Date.now() + MANUAL_HOLD;
+  setRoute(b.dataset.dir);
+  const n = nearestStation();
+  if(n && n.metres <= NEAR_METRES && n.route !== b.dataset.dir) geo.verdict = "held";
+  renderGeo();
+}));
+
+$("geoLine").addEventListener("click", () => {
+  const act = $("geoLine").dataset.act;
+  if(act === "on"){
+    settings.geoOn = true; saveSettings(); geo.state = "idle"; syncSheet();
+    askGeoPermission().then(() => { startGeoWatch(); pollGeoOnce(); });
+    return;
+  }
+  if(act !== "refresh") return;
+  $("geoText").textContent = "Checking where you are…";
+  startGeoWatch(); pollGeoOnce();
+});
+$("btnRefresh").addEventListener("click", () => refresh(true));
+$("btnPause").addEventListener("click", (e) => {
+  settings.auto = !settings.auto; saveSettings();
+  e.currentTarget.textContent = settings.auto ? "Pause updates" : "Resume updates";
+  e.currentTarget.setAttribute("aria-pressed", String(!settings.auto));
+  state.nextRefreshAt = settings.auto ? Date.now()+settings.refreshMs : 0;
+  syncSheet(); renderFooter();
+});
+$("btnKeys").addEventListener("click", () => openSheet());
+$("btnShowAll").addEventListener("click", () => {
+  settings.showAll = !settings.showAll; saveSettings();
+  syncSheet(); renderList();
+});
+
+/* sheet */
+function openSheet(){
+  syncSheet();
+  $("sheet").hidden = false; $("scrim").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("sheet").querySelector("input, select, button")?.focus();
+}
+function closeSheet(){ $("sheet").hidden = true; $("scrim").hidden = true; document.body.style.overflow = ""; }
+$("btnSettings").addEventListener("click", openSheet);
+$("scrim").addEventListener("click", closeSheet);
+addEventListener("keydown", (e) => { if(e.key === "Escape") closeSheet(); });
+
+function syncShowAll(){
+  const b = $("btnShowAll");
+  if(!b) return;
+  b.textContent = settings.showAll ? "Only trains that stop" : "Show all trains";
+  b.setAttribute("aria-pressed", String(settings.showAll));
+}
+
+function syncSheet(){
+  syncShowAll();
+  $("optAlerts").checked = !!settings.alerts;
+  $("optAlertMins").value = String(settings.alertMins);
+  $("optAuto").checked = !!settings.auto;
+  $("optShowAll").checked = !!settings.showAll;
+  $("optTheme").value = settings.theme;
+  $("optDemo").checked = !!settings.demo;
+  $("optGeo").checked = !!settings.geoOn;
+  $("geoState").textContent = geoStatusLine();
+  $("optAppId").value = settings.appId || "";
+  $("optAppKey").value = settings.appKey || "";
+  const st = $("keyState");
+  if(state.needsKeys) st.textContent = "TfL is asking for a key. Register free at api.tfl.gov.uk and paste it below.";
+  else if(state.error && state.error.kind !== "keys") st.textContent = "Last try: " + state.error.message + " — keys are optional, but they help with rate limits.";
+  else st.textContent = settings.appId ? "Using your TfL key. Live data is working." : "Live data works without a key on this network. Add one only if TfL asks.";
+}
+$("optAlerts").addEventListener("change", e => {
+  settings.alerts = e.target.checked;
+  if(settings.alerts && "Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission().catch(()=>{});
+  }
+  state.alertedFor = null; saveSettings();
+});
+$("optAlertMins").addEventListener("change", e => { settings.alertMins = Number(e.target.value)||2; state.alertedFor=null; saveSettings(); });
+$("optAuto").addEventListener("change", e => { settings.auto = e.target.checked; saveSettings(); $("btnPause").textContent = settings.auto?"Pause updates":"Resume updates"; state.nextRefreshAt = settings.auto ? Date.now()+settings.refreshMs : 0; renderFooter(); });
+$("optShowAll").addEventListener("change", e => { settings.showAll = e.target.checked; saveSettings(); renderList(); });
+$("optTheme").addEventListener("change", e => { settings.theme = e.target.value; saveSettings(); applyTheme(); });
+$("optGeo").addEventListener("change", async e => {
+  settings.geoOn = e.target.checked; saveSettings();
+  if(settings.geoOn){
+    geo.state = "idle"; geo.error = null; geo.verdict = null;
+    $("geoState").textContent = "Asking your phone…";
+    await askGeoPermission(); startGeoWatch(); await pollGeoOnce();
+  }else{
+    stopGeoWatch(); geo.pos = null; geo.verdict = null;
+  }
+  syncSheet(); renderGeo(); renderJourney();
+});
+$("btnGeoNow").addEventListener("click", async () => {
+  $("geoState").textContent = "Checking…";
+  startGeoWatch(); await pollGeoOnce(); syncSheet(); renderGeo();
+});
+$("optDemo").addEventListener("change", e => {
+  settings.demo = e.target.checked; saveSettings();
+  if(settings.demo){ state.arrivals = sampleArrivals(); state.error = null; }
+  else { state.arrivals = []; refresh(true); }
+  renderAll();
+});
+$("btnSaveKeys").addEventListener("click", () => {
+  settings.appId = $("optAppId").value.trim();
+  settings.appKey = $("optAppKey").value.trim();
+  saveSettings(); state.needsKeys = false; syncSheet(); closeSheet(); refresh(true);
+});
+$("btnTestData").addEventListener("click", async () => {
+  const st = $("keyState"); st.textContent = "Testing…";
+  try{ await getJSON(`/Line/${LINE}/Status`); st.textContent = "Working — TfL answered."; state.needsKeys = false; }
+  catch(e){ st.textContent = (e.kind==="keys" ? "TfL needs a key: " : "Problem: ") + e.message; if(e.kind==="keys") state.needsKeys = true; }
+  renderAll();
+});
+$("btnReset").addEventListener("click", () => {
+  Object.keys(localStorage).filter(k => k.startsWith(NS)).forEach(k => localStorage.removeItem(k));
+  settings = Object.assign({}, defaults, { refreshMs:20000 });
+  saveSettings(); closeSheet(); location.reload();
+});
+
+/* deep link: #to-tcr / #to-hayes */
+const hash = (location.hash||"").replace("#","");
+if(ROUTES[hash]) state.route = hash;
+
+applyTheme();
+syncSheet();
+$("btnPause").textContent = settings.auto ? "Pause updates" : "Resume updates";
+renderJourney();
+renderGeo();
+scheduleLoop();
+refresh();
+if(isNativeApp()){
+  const tip = $("homeTip");
+  if(tip) tip.textContent = "This is the installed app, so there is nothing to add to a home screen. Times come from Transport for London over your own connection; nothing is stored anywhere but this phone.";
+}
+
+if(settings.geoOn) { startGeoWatch(); pollGeoOnce(); }
+</script>
+</body>
+</html>
