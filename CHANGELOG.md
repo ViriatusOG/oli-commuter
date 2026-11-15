@@ -3,6 +3,12 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.4.2 — 2026-11-15
+
+- The app is now locked to portrait. Rotating the phone sideways broke the
+  layout; the two-column arrangement only appears in wide browser windows
+  on a computer
+
 ## 1.4.1 — 2026-11-15
 
 - Fixed: "Check for updates" did nothing. The App plugin that tells the app
