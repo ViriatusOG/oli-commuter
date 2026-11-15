@@ -43,7 +43,7 @@
   .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
 
-  .app{width:100%; max-width:540px; padding:0 14px calc(78px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
+  .app{width:100%; max-width:540px; padding:calc(10px + env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px;
        transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
   .app.is-pulling{transition:none}
 
@@ -74,24 +74,14 @@
   .route-where b{color:var(--ink)}
 
   /* pull-to-refresh indicator, parked where the old header buttons used to sit */
-  .pull-ind{width:44px;height:44px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;color:var(--el);
-            opacity:0;transform:scale(.55);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+  .pull-ind{position:absolute;top:10px;left:50%;transform:translateX(-50%) scale(.55);width:44px;height:44px;z-index:5;
+            border-radius:14px;display:grid;place-items:center;color:var(--el);background:var(--card);
+            box-shadow:0 2px 10px rgba(0,0,0,.18);opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none}
   .pull-ind svg{width:22px;height:22px}
-  .pull-ind.dragging,.pull-ind.loading{opacity:1;transform:scale(1)}
+  .pull-ind.dragging,.pull-ind.loading{opacity:1;transform:translateX(-50%) scale(1)}
   .pull-ind.loading svg{animation:spin .8s linear infinite}
 
-  /* ---------- top bar ---------- */
-  .bar{
-    position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:10px;
-    padding:calc(10px + env(safe-area-inset-top)) 2px 10px;
-    background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:blur(12px) saturate(1.2);
-  }
-  .mark{width:34px;height:34px;flex:0 0 auto;border-radius:9px;background:var(--el);display:grid;place-items:center}
-  .mark svg{width:22px;height:22px;display:block}
-  .bar-title{flex:1 1 auto; min-width:0}
-  .bar-title strong{display:block;font-size:1.02rem;letter-spacing:-.01em;line-height:1.2}
-  .bar-title span{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bar-title.compact span{color:var(--el);font-weight:700;font-variant-numeric:tabular-nums}
+  /* ---------- one row: where you are + the flip button ---------- */
   .icon-btn{
     width:44px;height:44px;flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:14px;
     display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);
@@ -115,7 +105,9 @@
   .banner .affects span{color:var(--card)}
   .banner[data-sev="bad"]{background:var(--bad-soft);color:var(--bad);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
   .banner[data-sev="warn"]{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
-  .banner[data-sev="good"]{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb, currentColor 24%, transparent)}
+  .banner[data-sev="good"]{width:fit-content;display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;
+      background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb, currentColor 24%, transparent);font-size:.78rem;font-weight:600}
+  .banner[data-sev="good"] .dotg{width:8px;height:8px;border-radius:50%;background:currentColor}
   .banner[data-sev="update"]{background:var(--el-soft);color:var(--ink);border:1px solid color-mix(in srgb, var(--el) 30%, transparent)}
   .banner[data-sev="update"] b{color:var(--ink)}
   .banner[data-sev="update"] span{color:var(--muted)}
@@ -134,21 +126,14 @@
   .route-strip .track{flex:1 1 auto;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--el) 0 12%, var(--line-strong) 12% 88%, var(--el) 88% 100%);position:relative}
   .route-strip .track i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--el);border:3px solid var(--card);transform:translate(-50%,-50%);left:12%;box-shadow:0 0 0 1px var(--el)}
   .route-strip.rev .track i{left:88%}
-  .seg{
-    display:flex;align-items:center;gap:10px;width:100%;
-    padding:11px 12px;min-height:58px;border:1.5px solid var(--line);background:transparent;border-radius:16px;cursor:pointer;text-align:left;
-  }
-  .seg small{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
-  .seg b{font-size:1rem;letter-spacing:-.015em;line-height:1.2}
-  .seg[aria-pressed="true"]{border-color:var(--el);background:var(--el-soft);box-shadow:inset 0 0 0 1px var(--el)}
-  .seg[aria-pressed="true"] small{color:var(--el)}
-  .seg:active{transform:scale(.99)}
-  .seg-grid{display:grid;gap:8px}
-  .seg .tick{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;display:grid;place-items:center}
-  .seg[aria-pressed="true"] .tick{border-color:var(--el);background:var(--el)}
-  .seg .tick svg{width:13px;height:13px;opacity:0;color:#fff}
-  .seg[aria-pressed="true"] .tick svg{opacity:1}
-  .seg .txt-wrap{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .dir-row{display:flex;align-items:center;gap:12px;padding:2px 0}
+  .dir-txt{flex:1 1 auto;min-width:0}
+  .dir-txt small{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  .dir-txt b{display:block;font-size:1.05rem;letter-spacing:-.015em;line-height:1.25}
+  .flip{width:52px;height:52px;flex:0 0 auto;border-radius:16px;border:1px solid var(--el);background:var(--el-soft);
+        color:var(--el);display:grid;place-items:center;cursor:pointer}
+  .flip:active{transform:scale(.96)}
+  .flip svg{width:24px;height:24px}
   /* "which station am I at" line */
   .geo{display:flex;align-items:center;gap:7px;width:100%;margin-top:10px;padding:6px 4px;border:0;background:none;
        font:inherit;font-size:.79rem;color:var(--muted);text-align:left;cursor:pointer;border-radius:10px;min-height:34px}
@@ -281,7 +266,7 @@
     .app{max-width:840px;gap:14px}
     main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
     #journey{grid-column:1}
-    #heroWrap{grid-column:1;position:sticky;top:72px}
+    #heroWrap{grid-column:1;position:sticky;top:8px}
     #listCard{grid-column:2;grid-row:1 / span 2;position:sticky;top:72px;max-height:calc(100dvh - 150px);overflow:auto}
     main{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
   }
@@ -293,37 +278,35 @@
 <body>
 <div class="app">
 
-  <header class="bar">
-    <span class="mark" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none"><rect x="1" y="10" width="22" height="4.6" rx="2.3" fill="#fff"/><circle cx="12" cy="12.3" r="5.4" stroke="#fff" stroke-width="2.4" fill="none"/></svg>
-    </span>
-    <div class="bar-title" id="barTitle">
-      <strong>Next train</strong>
-      <span id="barSub">Elizabeth line · live departures</span>
-    </div>
-    <span class="pull-ind" id="pullInd" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg>
-    </span>
-  </header>
-
   <div id="bannerSlot"></div>
   <div id="updateBannerSlot"></div>
 
   <main>
+    <div id="heroWrap">
+      <span class="pull-ind" id="pullInd" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/></svg>
+      </span>
+      <section class="hero" id="hero">
+        <div class="kicker"><span class="live" aria-hidden="true"></span><span id="heroKicker">Next train</span></div>
+        <div id="heroBody">
+          <div class="skel-row" style="grid-template-columns:1fr"><div class="skeleton" style="height:64px;border-radius:16px"></div></div>
+        </div>
+      </section>
+    </div>
+
     <section class="card journey" id="journey" aria-label="Direction of travel">
       <div class="route-strip" id="routeStrip" aria-hidden="true">
         <span class="st" id="stripFrom">TCR</span>
         <span class="track"><i></i></span>
         <span class="st" id="stripTo">Hayes</span>
       </div>
-      <div class="seg-grid">
-        <button class="seg" data-dir="to-work" aria-pressed="true">
-          <span class="txt-wrap"><small>…</small><b>…</b></span>
-          <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
-        </button>
-        <button class="seg" data-dir="to-home" aria-pressed="false">
-          <span class="txt-wrap"><small>…</small><b>…</b></span>
-          <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg></span>
+      <div class="dir-row">
+        <div class="dir-txt">
+          <small id="dirAt">I am at …</small>
+          <b id="dirTo">Train to …</b>
+        </div>
+        <button class="flip" id="btnFlip" type="button" aria-label="Flip the direction" title="Flip the direction">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3-4 4 4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
         </button>
       </div>
       <button class="geo" id="geoLine" type="button" title="Check where you are">
@@ -332,15 +315,6 @@
       </button>
       <div class="facts" id="facts"></div>
     </section>
-
-    <div id="heroWrap">
-      <section class="hero" id="hero">
-        <div class="kicker"><span class="live" aria-hidden="true"></span><span id="heroKicker">Next train to Hayes &amp; Harlington</span></div>
-        <div id="heroBody">
-          <div class="skel-row" style="grid-template-columns:1fr"><div class="skeleton" style="height:64px;border-radius:16px"></div></div>
-        </div>
-      </section>
-    </div>
 
     <section class="card list" id="listCard">
       <div class="list-head">
@@ -375,10 +349,10 @@
 <aside id="setupSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setupTitle">
   <div class="grab" aria-hidden="true"></div>
   <h2 id="setupTitle">Your two stations</h2>
-  <p class="lede">Pick the station where you live and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
-  <h3>Where you live</h3>
+  <p class="lede">Pick the station you leave from and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
+  <h3>Home</h3>
   <select class="txt" id="setupHome"></select>
-  <h3>Where you work</h3>
+  <h3>Work</h3>
   <select class="txt" id="setupWork"></select>
   <p class="fine" id="setupNote" hidden>Both picks need to be different stations.</p>
   <div class="row" style="margin-top:16px">
@@ -398,11 +372,11 @@
 
   <h3>Your stations</h3>
   <div class="stack">
-    <label class="fine" for="optHome">Where you live</label>
+    <label class="fine" for="optHome">Home</label>
     <select class="txt" id="optHome"></select>
-    <label class="fine" for="optWork">Where you work</label>
+    <label class="fine" for="optWork">Work</label>
     <select class="txt" id="optWork"></select>
-    <p class="fine">The board shows the next train to your work station while you are at home, and the journey home the other way round. Changing either re-aims the whole board.</p>
+    <p class="fine">The board shows the next train to Work while you are at Home, and the journey back the other way round. Changing either re-aims the whole board.</p>
   </div>
 
   <h3>Updates</h3>
@@ -938,7 +912,10 @@ function applyPairIfNeeded(){
 let setupOpened = false;
 function maybeOpenSetup(){
   if(setupOpened) return;
+  /* asked once per install: after that the pair lives in Settings */
+  if(store.get("setupSeen", false)) return;
   setupOpened = true;
+  store.set("setupSeen", true);
   fillStationSelects($("setupHome"), state.ids.home);
   fillStationSelects($("setupWork"), state.ids.work);
   setupPreview();
@@ -1088,14 +1065,8 @@ function minsLabel(m){
 function renderJourney(){
   const r = ROUTES[state.route];
   const from = STATIONS[r.from], to = STATIONS[r.to];
-  document.querySelectorAll(".seg").forEach(b => {
-    b.setAttribute("aria-pressed", String(b.dataset.dir === state.route));
-    const atHome = b.dataset.dir === "to-work";
-    const fromKey = atHome ? "home" : "work";
-    const toKey   = atHome ? "work" : "home";
-    b.querySelector("small").textContent = "I am at " + STATIONS[fromKey].label;
-    b.querySelector("b").textContent = "Train to " + STATIONS[toKey].label;
-  });
+  $("dirAt").textContent = "I am at " + from.label;
+  $("dirTo").textContent = "Train to " + to.label;
   $("stripFrom").textContent = from.abbr;
   $("stripTo").textContent = to.abbr;
   $("routeStrip").classList.toggle("rev", state.route === "to-home");
@@ -1143,8 +1114,6 @@ function renderHero(){
       </div>`;
     $("heroRetry").addEventListener("click", () => keys ? openSheet() : refresh(true));
     $("heroSettings").addEventListener("click", openSheet);
-    $("barTitle").classList.remove("compact");
-    $("barSub").textContent = keys ? "needs a TfL API key" : offline ? "no signal" : "no live data";
     return;
   }
 
@@ -1152,8 +1121,6 @@ function renderHero(){
     hero.classList.remove("due");
     body.innerHTML = `<div class="to">No train found that stops at ${esc(STATIONS[otherKey()].label)}</div>
       <div class="via">None of the next 45 departures on TfL’s feed reaches that station. Turn on “${settings.showAll?"Hide":"Show"} trains that miss this station” to see what is running, or check the line status above — engineering works and part closures do cause this.</div>`;
-    $("barTitle").classList.remove("compact");
-    $("barSub").textContent = "Nothing direct in the next hour";
     return;
   }
   hero.classList.remove("is-error");
@@ -1184,8 +1151,6 @@ function renderHero(){
     <details class="via-box" id="heroViaBox"><summary>${viaSummary}</summary><div class="via" id="heroVia"></div></details>`;
   renderJourneyViaOnly();
 
-  $("barTitle").classList.add("compact");
-  $("barSub").textContent = heroBarText(lab, next);
   hero.dataset.depId = next.id;
 }
 
@@ -1232,14 +1197,6 @@ function depRow(d, isOther){
     </div></li>`;
 }
 
-function heroBarText(lab, next){
-  const when = lab.big === "Due" ? "due now"
-    : lab.big.includes("h") ? `in ${lab.big}`
-    : lab.big.includes(" ") ? `in ${lab.big}`
-    : `in ${lab.big} min`;
-  return `${when} · ${next.destination}${next.platform?" · platform "+next.platform:""}`;
-}
-
 function renderList(){
   const all = decorate(state.arrivals);
   $("listCard").style.display = all.length ? "" : "none";
@@ -1271,18 +1228,17 @@ function renderStatus(){
   const slot = $("bannerSlot");
   const s = state.status;
   if(!s){ slot.innerHTML = ""; return; }
+  const full = (s.reason || "").replace(/&#10;/g, " ").replace(/\s+/g, " ").trim();
   const good = s.statusSeverity === 10 || s.statusSeverityDescription === "Good Service";
   if(good){
-    slot.innerHTML = `<div class="banner" data-sev="good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 13 4 4L19 7"/></svg>
-      <div class="body"><b>Elizabeth line: Good Service</b></div></div>`;
+    slot.innerHTML = `<div class="banner" data-sev="good"><span class="dotg"></span>All good</div>`;
     return;
   }
-  const sev = s.statusSeverity >= 6 ? "bad" : (s.statusSeverity >= 4 ? "warn" : "good");
-  const full = (s.reason || "").replace(/&#10;/g, " ").replace(/\s+/g, " ").trim();
   const first = full.split(/(?<=[a-z0-9\)])[.!?](\s|$)/)[0].trim();
   const head  = first.length > 104 ? first.slice(0,102).trim()+"…" : first;
   const more  = full.length > head.length ? full.slice(head.length).trim() : "";
   const affects = mentionsOurStations(full);
+  const sev = affects ? "bad" : "warn";   // amber for line problems, red when your route is hit
   slot.innerHTML = `<div class="banner" data-sev="${sev}" role="status">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3.1L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <div class="body">
@@ -1355,7 +1311,6 @@ function tick(){
       const cd = $("heroBody").querySelector(".cd");
       cd.innerHTML = esc(lab.big) + (lab.small?`<small>${esc(lab.small)}</small>`:"");
       $("hero").classList.toggle("due", m <= 1 && m > -2);
-      $("barSub").textContent = heroBarText(lab, next);
       if(Math.floor(m) !== state.lastAnnounce && m > -1){
         state.lastAnnounce = Math.floor(m);
         $("announce").textContent = `Next train to ${STATIONS[otherKey()].label}: ${next.destination}, ${lab.big==="Due"?"due now":"in "+lab.big+" minutes"}${next.platform?", platform "+next.platform:""}.`;
@@ -1775,13 +1730,14 @@ function setRoute(route, refetch){
   if(refetch !== false) refresh();
 }
 
-document.querySelectorAll(".seg").forEach(b => b.addEventListener("click", () => {
+$("btnFlip").addEventListener("click", () => {
+  const dir = state.route === "to-work" ? "to-home" : "to-work";
   geo.manualUntil = Date.now() + MANUAL_HOLD;
-  setRoute(b.dataset.dir);
+  setRoute(dir);
   const n = nearestStation();
-  if(n && n.metres <= NEAR_METRES && n.route !== b.dataset.dir) geo.verdict = "held";
+  if(n && n.metres <= NEAR_METRES && n.route !== dir) geo.verdict = "held";
   renderGeo();
-}));
+});
 
 $("geoLine").addEventListener("click", () => {
   const act = $("geoLine").dataset.act;

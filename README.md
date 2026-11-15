@@ -1,7 +1,7 @@
 # Oli Commuter
 
-An Elizabeth line departures board for the journey that matters — the one between **the two
-stations you pick**: where you live and where you work. Live times from Transport for London,
+An Elizabeth line departures board for the journey that matters — the one between **your two
+stations**, the ones you mark as Home and Work. Live times from Transport for London,
 no account, no tracking, and — in the Android app — it opens on the right end of the platform
 because it knows which station you are standing at.
 
@@ -18,9 +18,9 @@ Grab the newest `Oli-Commuter-debug.apk` from [Releases](../../releases) and put
 phone (cable, Files, email — whatever you already use). Tap it, allow *install from this app*
 once when Android complains, tap it again. Android 7.0 or newer.
 
-On first launch it asks two things: **which two stations are yours** (where you live and where
-you travel to — it guesses the classic pair, you confirm or change in two taps), and
-**location** (**While using the app**) so it knows which of the two you are standing at.
+On first launch it asks two things: **which two stations are yours** (it guesses the classic
+pair, you confirm or change in two taps) — it asks once and then leaves the pair to Settings —
+and **location** (**While using the app**) so it knows which of the two you are standing at.
 Nothing else is needed — no account, nothing running in the background.
 
 From 1.3.0 an installed app updates itself from within (see above), so you only
@@ -32,12 +32,15 @@ id is `com.localtools.olicommuter`.
 
 ## What it does
 
-- **Your two stations.** First run asks where you live and where you work; after that the whole
-  board faces the right way — next train to work when you are at home, the journey home when you
-  are not. Either one can be changed in Settings at any time, and every station on the line is a
+- **Your two stations, Home and Work.** First run asks for them once; after that the whole
+  board faces the right way — next train to Work when you are at Home, the journey back when
+  you are not. Either one is changed in Settings any time, and every station on the line is a
   valid pick, not just the two this app shipped with.
-- **The next train, unmissably big** — countdown, minutes, platform, destination, and whether
-  it actually calls at the other station.
+- **The next train, unmissably big, and at the top.** Countdown, minutes, platform,
+  destination, and whether it actually calls at the other station — the big card leads the
+  screen and nothing else repeats it.
+- **One row, one flip.** The journey card says where you are, where the trains go, and a single
+  button flips the direction.
 - **Updates itself.** The app checks the release feed while it is open,
   offers a new version as a banner, downloads it (progress included), verifies
   the published SHA-256 and hands it to Android's installer. You can also
@@ -52,9 +55,10 @@ id is `com.localtools.olicommuter`.
   going the right way with no confirmation of a call says exactly that, never "stops here".
 - **Everything else on the line** is one tap away, greyed out, each with the reason it is
   useless to you.
-- **Service problems** from TfL appear at the top as soon as they exist. The 20-second refresh
-  can be paused; the board keeps the last real times and labels them as remembered rather than
-  live if the signal drops.
+- **Line status you can read at a glance.** A small green "All good" pill when the line is
+  fine; amber when there is a problem on the line; red, with an *on your route* badge, when the
+  problem hits your two stations. The 20-second refresh can be paused; the board keeps the last
+  real times and labels them as remembered rather than live if the signal drops.
 - **Alerts** vibrate — and notify, if you allow it — when the next train is within your warning
   time.
 - **One-handed by design.** One button on screen, where your thumb already is: Settings.
@@ -71,8 +75,8 @@ One decision: which of *your* two stations you are standing at, so the direction
   service, no geofence, nothing listening.
 - Inside 600 m it picks a direction. Further out it says *"Neither station is close · 9.1 km to
   TCR"* and leaves you the buttons.
-- A direction you tap by hand is left alone for ten minutes even if the GPS disagrees, and the
-  two buttons still work with location switched off entirely.
+- A direction you flip by hand is left alone for ten minutes even if the GPS disagrees, and the
+  flip button still works with location switched off entirely.
 - Station coordinates come from TfL's own published route data and are cached on the phone. The
   comparing happens on the handset; the only network traffic is the same anonymous TfL API call
   the web page makes.

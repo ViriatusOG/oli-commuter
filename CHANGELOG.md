@@ -3,6 +3,18 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.4.0 — 2026-11-15
+
+- The board now leads with the big next-train card at the top of the screen; the small
+  "Next train" bar that said the same thing underneath is gone
+- The direction card is now one row — where you are, where the trains go, and a single
+  button that flips the direction
+- The station setup sheet now appears only on first install; after that your pair is
+  changed in Settings, where the fields are labelled Home and Work
+- Line status: a small green "All good" pill when the line is fine, amber when there is
+  a problem on the line, red with an "on your route" badge when the problem hits your
+  two stations
+
 ## 1.3.2 — 2026-11-15
 
 - The Settings, setup and train-route sheets can now be dismissed by swiping
