@@ -1478,8 +1478,12 @@ const UPDATE = {
     const u = state.update;
     if(!u || u.status !== "ready" || !state.updatePath) return;
     try{
-      await window.Capacitor.Plugins.OliUpdater.install({ path: state.updatePath });
-      setUpdateLine("If the installer did not appear, allow “install unknown apps” for this app and try again.");
+      const res = await window.Capacitor.Plugins.OliUpdater.install({ path: state.updatePath });
+      if(res && res.needsPermission){
+        setUpdateLine("Allow “install unknown apps” for Oli Commuter on the screen Android just showed, come back, and tap Install again.");
+      } else {
+        setUpdateLine("The installer should now be on screen. The old version stays put until you confirm it.");
+      }
     }catch(e){
       setUpdateLine("Could not start the installer: " + (e.message || "unknown problem"));
     }
