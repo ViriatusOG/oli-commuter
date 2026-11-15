@@ -1,0 +1,85 @@
+name: APK
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths-ignore: ["**/*.md", "docs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Assemble and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+
+      - name: Install Capacitor
+        run: npm ci
+
+      - name: Copy the web bundle into the Android project
+        run: npx cap sync android
+
+      - name: Build the debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Build and sign a release APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          cp android/app/build/outputs/apk/debug/app-debug.apk build/Oli-Commuter-debug.apk
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "No KEYSTORE_BASE64 secret: publishing the debug build only."
+            echo "A debug build installs fine; it just cannot be upgraded by a signed one."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > /tmp/release.keystore
+          ( cd android && ./gradlew --no-daemon assembleRelease )
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          cd android/app/build/outputs/apk/release
+          cp app-release-unsigned.apk "$GITHUB_WORKSPACE/build/Oli-Commuter-release.apk"
+          "$BT/apksigner" sign \
+            --ks /tmp/release.keystore \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --key-pass env:KEYSTORE_PASSWORD \
+            "$GITHUB_WORKSPACE/build/Oli-Commuter-release.apk"
+          "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/build/Oli-Commuter-release.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: build/*.apk
+          if-no-files-found: error
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/*.apk
+          generate_release_notes: true
+          body: |
+            Install `Oli-Commuter-debug.apk`: tap it, allow install from this app once, tap it again.
+            Android 7.0 or newer. See the changelog for what is new.
