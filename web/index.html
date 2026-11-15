@@ -398,14 +398,14 @@
   <div class="stack">
     <p class="fine" id="keyState">Checking whether live data works without a key…</p>
     <label class="fine" for="optAppId">app_id</label>
-    <input class="txt" id="optAppId" type="text" autocomplete="off" spellcheck="false" placeholder="from api.tfl.gov.uk (optional)">
+    <input class="txt" id="optAppId" type="text" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
     <label class="fine" for="optAppKey">app_key</label>
-    <input class="txt" id="optAppKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api.tfl.gov.uk (optional)">
+    <input class="txt" id="optAppKey" type="password" autocomplete="off" spellcheck="false" placeholder="from api-portal.tfl.gov.uk (optional)">
     <div class="row">
       <button class="btn primary" id="btnSaveKeys">Save key</button>
       <button class="btn" id="btnTestData">Test</button>
     </div>
-    <p class="fine">Free registration at <a href="https://api.tfl.gov.uk/-register" target="_blank" rel="noopener">api.tfl.gov.uk</a>. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
+    <p class="fine">Free registration at <a href="https://api-portal.tfl.gov.uk/" target="_blank" rel="noopener">api-portal.tfl.gov.uk</a>. Live times come from Transport for London and are shown as TfL reports them. The station list comes from TfL too, so this page works out by itself which trains really call at the other station.</p>
   </div>
 
   <h3>If you want a look with no signal</h3>
@@ -1017,7 +1017,7 @@ function renderHero(){
     body.innerHTML = `
       <div class="to">${keys ? "TfL wants a free API key" : offline ? "No signal to TfL" : "Could not read the live board"}</div>
       <div class="via">${keys
-          ? "TfL’s live boards need a free <b>app_id</b> and <b>app_key</b>. Register at api.tfl.gov.uk, then paste them in Settings — they stay on this phone."
+          ? "TfL’s live boards need a free <b>app_id</b> and <b>app_key</b>. Register at api-portal.tfl.gov.uk, then paste them in Settings — they stay on this phone."
           : offline
             ? "Turn off airplane mode or move somewhere with signal, then try again. Departures you saw earlier are kept on this phone."
             : esc(state.error.message || "Something went wrong talking to TfL.")}</div>
@@ -1491,7 +1491,7 @@ function syncSheet(){
   $("optAppId").value = settings.appId || "";
   $("optAppKey").value = settings.appKey || "";
   const st = $("keyState");
-  if(state.needsKeys) st.textContent = "TfL is asking for a key. Register free at api.tfl.gov.uk and paste it below.";
+  if(state.needsKeys) st.textContent = "TfL is asking for a key. Register free at api-portal.tfl.gov.uk and paste it below.";
   else if(state.error && state.error.kind !== "keys") st.textContent = "Last try: " + state.error.message + " — keys are optional, but they help with rate limits.";
   else st.textContent = settings.appId ? "Using your TfL key. Live data is working." : "Live data works without a key on this network. Add one only if TfL asks.";
 }

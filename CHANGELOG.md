@@ -3,6 +3,11 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are `v1.2.3`.
 
+## 1.1.1 — 2026-11-15
+
+- Registration link in Settings now points at TfL's current portal
+  (api-portal.tfl.gov.uk); the old api.tfl.gov.uk address is gone
+
 ## 1.1.0 — 2026-11-15
 
 - Pull to refresh: grab the board at the top and drag down; let go and
