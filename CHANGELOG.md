@@ -3,6 +3,14 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.2 — 2026-11-15
+
+- Picking a station is one move now: type in the find box and tap a name from
+  the list that appears under it. Before, typing quietly filtered a list you
+  could not see unless you opened the dropdown
+- After an update the app opens with a short "New in X" list instead of
+  saying nothing about what changed
+
 ## 1.5.1 — 2026-11-15
 
 - Fixed: the slim top countdown could sit on screen showing an old time while

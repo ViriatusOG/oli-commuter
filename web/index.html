@@ -266,6 +266,14 @@
     background:var(--card);border-top:1px solid var(--line)}
   .sheet-done .btn{width:100%}
   #routeSheet .route-head{position:sticky;top:0;z-index:2;background:var(--card);padding:8px 0 6px}
+  .suglist{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}
+  .sug{display:block;width:100%;text-align:left;min-height:48px;padding:12px 14px;border-radius:12px;
+    border:1px solid var(--line);background:var(--bg);font:inherit;font-weight:650;font-size:.92rem;
+    color:var(--ink);cursor:pointer}
+  .sug:active{background:var(--el-soft);border-color:var(--el)}
+  .sug.more{border:0;background:none;color:var(--muted);font-weight:600;min-height:auto;padding:4px 2px}
+  .newsl{list-style:disc;margin:10px 0 0;padding-left:22px;font-size:.92rem;line-height:1.6;color:var(--ink-2)}
+  .newsl li{margin-bottom:9px}
   .keybox summary{cursor:pointer;font-weight:750;font-size:.9rem;min-height:44px;display:flex;align-items:center}
   .btn.danger{border-color:var(--bad);color:var(--bad);box-shadow:none}
   .fine{font-size:.76rem;color:var(--muted);line-height:1.45}
@@ -363,6 +371,7 @@
 <div id="scrim" class="scrim" hidden></div>
 <div id="scrim2" class="scrim" hidden></div>
 <div id="scrim3" class="scrim" hidden></div>
+<div id="scrim4" class="scrim" hidden></div>
 <aside id="setupSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="setupTitle">
   <div class="grab" aria-hidden="true"></div>
   <div class="sheet-scroll">
@@ -370,9 +379,11 @@
   <p class="lede">Pick the station you leave from and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
   <h3>Home</h3>
   <input class="txt" id="setupHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px;margin-bottom:6px">
+    <div class="suglist" id="setupHomeSugs" hidden></div>
   <select class="txt" id="setupHome"></select>
   <h3>Work</h3>
   <input class="txt" id="setupWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px;margin-bottom:6px">
+    <div class="suglist" id="setupWorkSugs" hidden></div>
   <select class="txt" id="setupWork"></select>
   <p class="fine" id="setupNote" hidden>Both picks need to be different stations.</p>
   <div class="row" style="margin-top:16px">
@@ -386,6 +397,14 @@
   <div class="sheet-scroll" id="routeScroll"><div id="routeBody"></div></div>
   <div class="sheet-done"><button class="btn primary" id="btnRouteDone">Done</button></div>
 </aside>
+<aside id="newsSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-scroll">
+    <h2 id="newsTitle">New in this version</h2>
+    <ul class="newsl" id="newsList"></ul>
+  </div>
+  <div class="sheet-done"><button class="btn primary" id="btnNewsDone">Got it</button></div>
+</aside>
 <aside id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="grab" aria-hidden="true"></div>
   <div class="sheet-scroll">
@@ -397,9 +416,11 @@
   <div class="stack">
     <label class="fine" for="optHome">Home</label>
     <input class="txt" id="optHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px">
+    <div class="suglist" id="optHomeSugs" hidden></div>
     <select class="txt" id="optHome"></select>
     <label class="fine" for="optWork">Work</label>
     <input class="txt" id="optWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px">
+    <div class="suglist" id="optWorkSugs" hidden></div>
     <select class="txt" id="optWork"></select>
     <p class="fine">The board shows the next train to Work while you are at Home, and the journey back the other way round. Changing either re-aims the whole board.</p>
   </div>
@@ -1704,9 +1725,10 @@ function fillStationSelects(el, selectedId){
   el.innerHTML = ids.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("");
   if(selectedId && state.names[selectedId]) el.value = selectedId;
 }
-function stationFilterPair(selectId, inputId){
-  const sel = $(selectId), inp = $(inputId);
-  if(!sel || !inp) return;
+function stationFilterPair(selectId, inputId, listId){
+  const sel = $(selectId), inp = $(inputId), list = $(listId);
+  if(!sel || !inp || !list) return;
+  const hide = () => { list.hidden = true; list.innerHTML = ""; };
   inp.addEventListener("input", () => {
     const q = inp.value.trim().toLowerCase();
     const ids = Object.keys(state.names || {}).sort((a,b) => cleanDest(state.names[a]).localeCompare(cleanDest(state.names[b])));
@@ -1717,12 +1739,26 @@ function stationFilterPair(selectId, inputId){
       : `<option value="">no station matches</option>`;
     if(keep.includes(before)) sel.value = before;
     if(sel.value !== before) sel.dispatchEvent(new Event("change", { bubbles: true }));
+    if(!q){ hide(); return; }
+    list.innerHTML = keep.slice(0, 7).map(id =>
+        `<button type="button" class="sug" data-id="${id}">${esc(cleanDest(state.names[id]))}</button>`).join("")
+      + (keep.length > 7 ? `<span class="sug more">${keep.length - 7} more — open the list below</span>` : "")
+      + (!keep.length ? `<span class="sug more">no station matches that</span>` : "");
+    list.hidden = false;
+  });
+  list.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("button.sug");
+    if(!b) return;
+    const before = sel.value;
+    fillStationSelects(sel, b.dataset.id);
+    inp.value = ""; hide();
+    if(sel.value !== before) sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
-stationFilterPair("setupHome","setupHomeFind");
-stationFilterPair("setupWork","setupWorkFind");
-stationFilterPair("optHome","optHomeFind");
-stationFilterPair("optWork","optWorkFind");
+stationFilterPair("setupHome","setupHomeFind","setupHomeSugs");
+stationFilterPair("setupWork","setupWorkFind","setupWorkSugs");
+stationFilterPair("optHome","optHomeFind","optHomeSugs");
+stationFilterPair("optWork","optWorkFind","optWorkSugs");
 
 function setupPreview(){
   const h = $("setupHome").value, w = $("setupWork").value;
@@ -1914,6 +1950,7 @@ addEventListener("scroll", () => {
 $("scrim").addEventListener("click", closeSheet);
 function closeTopSheet(){
   if(!$("routeSheet").hidden){ closeRouteSheet(); return true; }
+  if(!$("newsSheet").hidden){ closeNews(); return true; }
   if(!$("setupSheet").hidden){ setupOpened = true; closeSetup(); return true; }
   if(!$("sheet").hidden){ closeSheet(); return true; }
   return false;
@@ -2071,13 +2108,45 @@ if(isNativeApp()){
 let geoDeferred = !store.get("setupSeen", false);
 if(settings.geoOn && !geoDeferred){ startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
+const NOTES = {
+  "1.5.2": [
+    "Picking a station is one move now: type in the find box and tap a name from the list under it.",
+    "After an update this app tells you what changed, instead of saying nothing."
+  ],
+  "1.5.1": [
+    "The slim top countdown only appears once the big card has scrolled away, and always matches it."
+  ],
+  "1.5.0": [
+    "Back button closes sheets first, and only then leaves the app.",
+    "The countdown stays on top as a slim bar once the big card scrolls away.",
+    "Station pickers got a type-to-find box.",
+    "The update banner can be dismissed and shows download progress.",
+    "Dark mode is brighter, and launching no longer flashes white.",
+    "The alert really buzzes now — it was missing a permission.",
+    "Under ten minutes the countdown reads 6:03 min."
+  ]
+};
+function maybeShowNews(v){
+  const prior = store.get("seenVersion", null);
+  store.set("seenVersion", v);
+  if(!prior || prior === v) return;
+  const items = NOTES[v] || ["Small fixes to keep the board honest."];
+  $("newsTitle").textContent = "New in " + v;
+  $("newsList").innerHTML = items.map(t => "<li>" + esc(t) + "</li>").join("");
+  $("newsSheet").hidden = false; $("scrim4").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closeNews(){ $("newsSheet").hidden = true; $("scrim4").hidden = true; document.body.style.overflow = ""; }
+$("scrim4").addEventListener("click", closeNews);
+$("btnNewsDone").addEventListener("click", closeNews);
+makeSheetClosable($("newsSheet"), $("scrim4"), closeNews);
 function showVersion(){
   const el = $("appVersion");
   if(!el) return;
   const P = window.Capacitor && window.Capacitor.Plugins;
   if(!isNativeApp() || !P || !P.App){ el.textContent = "Oli Commuter \u00b7 web"; return; }
   P.App.getInfo()
-    .then(i => { el.textContent = "Oli Commuter " + i.version + (i.build && String(i.build) !== "0" ? " (build " + i.build + ")" : ""); })
+    .then(i => { el.textContent = "Oli Commuter " + i.version + (i.build && String(i.build) !== "0" ? " (build " + i.build + ")" : ""); maybeShowNews(i.version); })
     .catch(() => {});
 }
 showVersion();
