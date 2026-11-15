@@ -3,6 +3,15 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.4.1 — 2026-11-15
+
+- Fixed: "Check for updates" did nothing. The App plugin that tells the app
+  which version it is was missing from the build, so the check failed
+  silently; the plugin is now in the app and the check says so instead of
+  doing nothing
+- The version line in Settings now shows the real installed version in the
+  app, not "web"
+
 ## 1.4.0 — 2026-11-15
 
 - The board now leads with the big next-train card at the top of the screen; the small

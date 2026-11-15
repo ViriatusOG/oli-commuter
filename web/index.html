@@ -1386,7 +1386,11 @@ const UPDATE = {
   async check(manual){
     if(state.updateBusy) return;
     const inst = await this.installed();
-    if(!inst){ state.update = null; renderUpdate(); return; }   // a plain web page updates by reloading
+    if(!inst){
+      state.update = null; renderUpdate();
+      if(manual) setUpdateLine("This build cannot read its own version, so it cannot check for updates. Get the newest APK from the GitHub release page once — after that it updates itself.");
+      return;
+    }   // a plain web page updates by reloading
     state.updateBusy = true;
     if(manual) setUpdateLine("Checking the release feed…");
     try{
