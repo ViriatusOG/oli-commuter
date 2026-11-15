@@ -3,6 +3,15 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.3 — 2026-11-15
+
+- The board has new edges. Corners are tighter (cards 14px, the big card
+  16px, sheets 20px), the big card no longer throws a purple haze across
+  the card beneath it, and the cards sit with honest air between them
+- The journey card ends where its content ends: less floating space
+- Cards rest on their outlines alone — shadows only where something
+  actually floats (the buttons and the gear)
+
 ## 1.5.2 — 2026-11-15
 
 - Picking a station is one move now: type in the find box and tap a name from
