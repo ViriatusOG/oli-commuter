@@ -40,8 +40,14 @@ id is `com.localtools.olicommuter`.
 - **The next train, unmissably big, and at the top.** Countdown, minutes, platform,
   destination, and whether it actually calls at the other station — the big card leads the
   screen and nothing else repeats it.
-- **One row, one flip.** The journey card says where you are, where the trains go, and a single
-  button flips the direction.
+- **When "2 minutes" quietly becomes "7", you will know.** The app remembers what TfL first
+  predicted for each train; when the prediction slips, the train turns amber with **+5 late** on
+  the big card, in the list and on the route sheet — measured against TfL's own earlier word,
+  never invented from a timetable. A late train is announced aloud once, for screen readers.
+- **And when it gets to the far station.** Each train carries the time TfL expects it at the
+  other station — read straight from that station's own live board, so it is a prediction, not a
+  guess, and shown only while TfL can actually see that far. A train that has run past its
+  "Due" moment is retired quickly, so the board never lags the phone's clock.
 - **Updates itself.** The app checks the release feed while it is open,
   offers a new version as a banner, downloads it (progress included), verifies
   the published SHA-256 and hands it to Android's installer. You can also

@@ -20,6 +20,7 @@
     --line:#e2dfeb; --line-strong:#cdc8dd;
     --ok:#0a7a3c; --ok-soft:#e3f5ea; --warn:#8a5300; --warn-soft:#fdf0dc; --bad:#b3122f; --bad-soft:#fde7ea;
     --shadow:0 1px 2px rgba(18,10,40,.06), 0 8px 24px -12px rgba(18,10,40,.18);
+    --late:#96550b; --late-soft:#fff2d9; --late-line:#e9c887;
     --radius:14px;
   }
   html[data-theme="dark"]{
@@ -28,6 +29,7 @@
     --line:#292733; --line-strong:#6a6490;
     --ok:#4ad08a; --ok-soft:#12291d; --warn:#f0b95e; --warn-soft:#2b2113; --bad:#ff8095; --bad-soft:#2e1419;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -14px rgba(0,0,0,.7);
+    --late:#ffc46b; --late-soft:#3a2c12; --late-line:#6d5320;
   }
   *,*::before,*::after{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -155,6 +157,7 @@
   .hero .to{margin-top:8px;font-size:1.18rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .hero .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .chip{font-size:.78rem;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.28);white-space:nowrap}
+  .chip.late{background:#ffd77a;color:#3d2a00;border-color:transparent}
   .chip.plat{background:#fff;color:var(--el-2);border-color:#fff}
   .hero .via{margin-top:8px;font-size:.8rem;opacity:.92;line-height:1.45}
   .hero .via-box{margin-top:8px;border-top:1px solid rgba(255,255,255,.24);padding-top:6px}
@@ -196,6 +199,8 @@
   .badge.q{background:var(--warn-soft);color:var(--warn)}
   .dep.other{opacity:.62}
   .dep.other .mins{background:var(--bg);color:var(--muted)}
+  .dep.late .mins{background:var(--late-soft);color:var(--late);border:1px solid var(--late-line)}
+  .latenote{color:var(--late);font-weight:800}
   details.more{margin-top:4px}
   details.more>summary{list-style:none;cursor:pointer;padding:10px 0;font-size:.84rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;min-height:44px}
   details.more>summary::-webkit-details-marker{display:none}
@@ -996,8 +1001,13 @@ async function loadArrivals(){
   const key = originKey();
   const id = state.ids[key];
   if(!id) throw new ApiError("http", 0, "Could not find "+STATIONS[key].label+" on the Elizabeth line.");
-  const raw = await getJSON(`/Line/${LINE}/Arrivals/${encodeURIComponent(id)}`, { count:"45" });
+  const otherId = state.ids[otherKey()];
+  const [raw, otherRaw] = await Promise.all([
+    getJSON(`/Line/${LINE}/Arrivals/${encodeURIComponent(id)}`, { count:"45" }),
+    otherId ? getJSON(`/Line/${LINE}/Arrivals/${encodeURIComponent(otherId)}`, { count:"45" }).catch(() => null) : Promise.resolve(null),
+  ]);
   if(!Array.isArray(raw)) throw new ApiError("http", 0, "Unexpected reply from TfL.");
+  state.otherArrivals = Array.isArray(otherRaw) ? otherRaw : [];
 
   // Rough clock correction so a wrong phone clock does not ruin the countdowns.
   const sent = raw.find(a => a.timing && a.timing.sent && a.timing.sent > "2000-01-01");
@@ -1041,15 +1051,63 @@ function decorate(list){
   const now = Date.now() + state.serverSkew;
   const out = [];
   const seen = new Set();
+  if(state.ledFor !== list){
+    // new data arrived: re-base the lateness ledger and pair this station's
+    // trains with the far station's own feed to learn where they land there.
+    // An empty feed must not touch the ledger — boot renders an empty board
+    // before the stored ledger is restored, and wiping there would erase it.
+    state.ledFor = list;
+    if(!list.length){ state.arrivesMap = {}; } else {
+    const rawId = a => (a && a.id !== undefined && a.id !== null) ? String(a.id) : null;
+    const prev = (state.lateLedger && typeof state.lateLedger === "object") ? state.lateLedger : {};
+    const rebuilt = {};
+    for(const k in prev){ if(now - (prev[k].seen||0) < 25*60e3) rebuilt[k] = prev[k]; }
+    const mine = [];
+    for(const a of list){
+      if(!a || a.lineId !== LINE) continue;
+      const eta0 = Date.parse(a.expectedArrival || a.aimedArrival || "");
+      if(!eta0 || isNaN(eta0)) continue;
+      const rid = rawId(a);
+      if(rid){ rebuilt[rid] = { base: Math.min((rebuilt[rid]||{}).base !== undefined ? rebuilt[rid].base : eta0, eta0), seen: now }; }
+      mine.push({ rid, dest: a.destinationNaptanId || cleanDest(a.destinationName||""), eta: eta0 });
+    }
+    state.lateLedger = rebuilt;
+    store.set("lateLedger", rebuilt);
+    const others = [];
+    for(const o of state.otherArrivals || []){
+      if(!o || o.lineId !== LINE) continue;
+      const eta0 = Date.parse(o.expectedArrival || o.aimedArrival || "");
+      if(!eta0 || isNaN(eta0)) continue;
+      others.push({ dest: o.destinationNaptanId || cleanDest(o.destinationName||""), eta: eta0 });
+    }
+    others.sort((x,y) => x.eta - y.eta);
+    mine.sort((x,y) => x.eta - y.eta);
+    const used = new Set(); const amap = {}; let lastPair = 0;
+    for(const m of mine){
+      for(const o of others){
+        if(used.has(o.eta) || o.dest !== m.dest) continue;
+        if(o.eta <= m.eta + 120e3 || o.eta >= m.eta + 90*60e3 || o.eta < lastPair) continue;
+        used.add(o.eta); lastPair = o.eta;
+        if(m.rid) amap[m.rid] = o.eta;
+        break;
+      }
+    }
+    state.arrivesMap = amap;
+    }
+  }
   for(const a of list){
     if(!a || a.lineId !== LINE) continue;
     const eta = Date.parse(a.expectedArrival || a.aimedArrival || "");
     if(!eta || isNaN(eta)) continue;
     const live = Date.parse(a.currentTimeToLive || a.timeToLive || "");
     if(live && !isNaN(live) && now > live + 60e3) continue;     // gone stale
-    if(now > eta + 150e3) continue;                              // already and gone
+    if(now > eta + 75e3) continue;                               // ran off its time
     const id = [a.destinationNaptanId || a.destinationName, a.platformName, eta].join("|");
     if(seen.has(id)) continue; seen.add(id);
+    const rid = (a.id !== undefined && a.id !== null) ? String(a.id) : id;
+    const led = state.lateLedger && state.lateLedger[rid];
+    let lateMin = 0;
+    if(led && eta - led.base >= 90e3) lateMin = Math.max(1, Math.round((eta - led.base)/60000));
     const verdict = assess(a);
     out.push({
       id, eta, minutes:(eta - now)/60000,
@@ -1057,6 +1115,7 @@ function decorate(list){
       platform:cleanPlat(a.platformName),
       destinationNaptanId:a.destinationNaptanId || "",
       currentLocation:a.currentLocation || "",
+      rid, lateMin, arrivesOther:(state.arrivesMap||{})[rid] || 0,
       verdict:verdict.verdict, stopsToTarget:verdict.stopsToTarget, path:verdict.path,
     });
   }
@@ -1213,6 +1272,8 @@ function renderHero(){
         ? `<span class="chip">Calls at ${esc(STATIONS[otherKey()].label)}</span>`
         : `<span class="chip">Heading the right way · could not confirm it calls</span>`}
       ${next.stopsToTarget?`<span class="chip">~${next.stopsToTarget} ${stopWord} away</span>`:""}
+      ${next.lateMin?`<span class="chip late">+${next.lateMin} late</span>`:""}
+      ${next.arrivesOther?`<span class="chip">Arrives ${fmtClock(new Date(next.arrivesOther - state.serverSkew))}</span>`:"" }
     </div>
     <details class="via-box" id="heroViaBox"><summary>${viaSummary}</summary><div class="via" id="heroVia"></div></details>`;
   renderJourneyViaOnly();
@@ -1274,11 +1335,13 @@ function depRow(d, isOther){
     badge = `<span class="badge q">Check</span>`;
     sub = `Cannot confirm from TfL’s data`;
   }
-  return `<li><div class="dep${isOther?" other":""}${nowClass}${isOther?" hasbadge":""}" data-eta="${d.eta}" data-id="${esc(d.id)}">
+  const tail = (d.arrivesOther?` · arrives ${fmtClock(new Date(d.arrivesOther - state.serverSkew))}`:"")
+             + (d.lateMin?` · <span class="latenote">+${d.lateMin} late</span>`:"");
+  return `<li><div class="dep${isOther?" other":""}${nowClass}${d.lateMin?" late":""}${isOther?" hasbadge":""}" data-eta="${d.eta}" data-id="${esc(d.id)}">
       <div class="mins">${esc(lab.big)}${lab.small?`<small>${esc(lab.small)}</small>`:""}</div>
       <div class="mid">
         <div class="dest">${esc(d.destination)}</div>
-        <div class="sub">${d.platform?`Platform ${esc(d.platform)} · `:""}${sub} · ${fmtClock(new Date(d.eta - state.serverSkew))}</div>
+        <div class="sub">${d.platform?`Platform ${esc(d.platform)} · `:""}${sub} · ${fmtClock(new Date(d.eta - state.serverSkew))}${tail}</div>
       </div>
       ${isOther?`<div>${badge}</div>`:""}
     </div></li>`;
@@ -1400,6 +1463,10 @@ function tick(){
       $("hero").classList.toggle("due", m <= 1 && m > -2);
       const due = lab.big === "Due";
       if(due !== wasDue){ wasDue = due; if(due) $("announce").textContent = `Heads up — ${next.destination} for ${STATIONS[otherKey()].label} is due now.`; }
+      if(next.lateMin){
+        const lk = next.rid + ":" + next.lateMin;
+        if(lk !== state.lateAnnounced){ state.lateAnnounced = lk; $("announce").textContent = `${next.destination} is running ${next.lateMin} minutes late.`; }
+      }
       const mc = $("miniC");
       if(mc && !$("miniBar").hidden) mc.textContent = lab.big === "Due" ? "Due now" : lab.big + (lab.small ? " " + lab.small : "");
       maybeAlert(next);
@@ -1833,7 +1900,7 @@ function openRouteSheet(d){
   $("routeBody").innerHTML = `
     <div class="route-head">
       <h2 id="routeTitle">${esc(d.destination)} · ${fmtClock(clock)}</h2>
-      <p class="route-where">${when.big === "Due" ? "Due now" : when.big + " " + when.small}${calls}${d.platform?" · Platform "+esc(d.platform):""}</p>
+      <p class="route-where">${when.big === "Due" ? "Due now" : when.big + " " + when.small}${calls}${d.lateMin?` · <span class="latenote">+${d.lateMin} late</span>`:""}${d.arrivesOther?` · arrives ${fmtClock(new Date(d.arrivesOther - state.serverSkew))}`:""}${d.platform?" · Platform "+esc(d.platform):""}</p>
       <p class="route-where">${where}</p>
     </div>
     ${listHtml}`;
@@ -2105,10 +2172,16 @@ if(isNativeApp()){
   if(tip) tip.textContent = "This is the installed app, so there is nothing to add to a home screen. Times come from Transport for London over your own connection; nothing is stored anywhere but this phone.";
 }
 
+state.lateLedger = store.get("lateLedger", {}) || {}; state.arrivesMap = {}; state.ledFor = null;
 let geoDeferred = !store.get("setupSeen", false);
 if(settings.geoOn && !geoDeferred){ startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
 const NOTES = {
+  "1.5.4": [
+    "When TfL pushes a train back you now see how far: an amber '+5 late' on the card, in the list and on the route sheet.",
+    "Each train shows the time it is expected at your other station, read from that station's own live board.",
+    "A train that ran past its Due time is retired sooner \u2014 the big card no longer lags the phone's clock."
+  ],
   "1.5.3": [
     "The board has new edges: tighter corners, clean card outlines, and no more purple haze bleeding from the big card onto the ones below.",
     "The journey card ends where its content ends — less floating, more board."

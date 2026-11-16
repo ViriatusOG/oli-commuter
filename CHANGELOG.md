@@ -3,6 +3,20 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.4 — 2026-11-16
+
+- Late trains are named: the app keeps a ledger of TfL's first prediction per train
+  and, when it slips by 90 seconds or more, marks the train amber with "+N late"
+  on the hero, the list, the route sheet — and says it once for screen readers.
+  The baseline survives restarts; a recovered prediction clears the badge
+- Each train now also carries the time TfL expects it at the far station, paired
+  from the far station's own arrivals feed (same terminus, plausible gap, in
+  order); where no pairing is honest, nothing is claimed
+- A train older than 75 seconds past its expected time is retired — the "Due"
+  hero no longer sits there a minute behind the phone's clock (field report,
+  16:01 with a "Due 16:00" card)
+- Refresh now fetches both stations' arrival boards in one pass
+
 ## 1.5.3 — 2026-11-15
 
 - The board has new edges. Corners are tighter (cards 14px, the big card
