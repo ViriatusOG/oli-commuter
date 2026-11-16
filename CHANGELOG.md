@@ -3,6 +3,18 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.5 — 2026-11-16
+
+- The station picker is a single combobox: the box itself shows the current
+  station; tapping it drops the full list (current pick highlighted and
+  scrolled into view, list scrolls); typing narrows it live; one tap picks,
+  saves and leaves the name in the box; walking away mid-type restores the
+  current name
+- The redundant second control — the native dropdown and its system popup —
+  is gone from Settings and first-run setup. Its select element stays in the
+  page, invisible, as the stored value and the change-event carrier
+- README: the picker is described as it now behaves
+
 ## 1.5.4 — 2026-11-16
 
 - Late trains are named: the app keeps a ledger of TfL's first prediction per train

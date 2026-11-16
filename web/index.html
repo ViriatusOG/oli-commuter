@@ -271,12 +271,15 @@
     background:var(--card);border-top:1px solid var(--line)}
   .sheet-done .btn{width:100%}
   #routeSheet .route-head{position:sticky;top:0;z-index:2;background:var(--card);padding:8px 0 6px}
-  .suglist{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}
+  .pick{position:relative}
+  .picker-select{position:absolute;left:0;top:0;width:100%;height:2px;opacity:0;pointer-events:none;border:0;padding:0;margin:0}
+  .suglist{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px;max-height:232px;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .sug{display:block;width:100%;text-align:left;min-height:48px;padding:12px 14px;border-radius:12px;
     border:1px solid var(--line);background:var(--bg);font:inherit;font-weight:650;font-size:.92rem;
     color:var(--ink);cursor:pointer}
   .sug:active{background:var(--el-soft);border-color:var(--el)}
   .sug.more{border:0;background:none;color:var(--muted);font-weight:600;min-height:auto;padding:4px 2px}
+  .sug.on{border-color:var(--el);background:var(--el-soft)}
   .newsl{list-style:disc;margin:10px 0 0;padding-left:22px;font-size:.92rem;line-height:1.6;color:var(--ink-2)}
   .newsl li{margin-bottom:9px}
   .keybox summary{cursor:pointer;font-weight:750;font-size:.9rem;min-height:44px;display:flex;align-items:center}
@@ -383,13 +386,17 @@
   <h2 id="setupTitle">Your two stations</h2>
   <p class="lede">Pick the station you leave from and the one you travel to. The board then always faces the right way, and your location picks the direction for you. You can change either in Settings any time.</p>
   <h3>Home</h3>
-  <input class="txt" id="setupHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px;margin-bottom:6px">
+  <div class="pick">
+    <input class="txt" id="setupHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Home station — type to find, tap to pick" style="min-height:44px">
     <div class="suglist" id="setupHomeSugs" hidden></div>
-  <select class="txt" id="setupHome"></select>
+    <select class="txt picker-select" id="setupHome" tabindex="-1" aria-hidden="true"></select>
+  </div>
   <h3>Work</h3>
-  <input class="txt" id="setupWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px;margin-bottom:6px">
+  <div class="pick">
+    <input class="txt" id="setupWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Work station — type to find, tap to pick" style="min-height:44px">
     <div class="suglist" id="setupWorkSugs" hidden></div>
-  <select class="txt" id="setupWork"></select>
+    <select class="txt picker-select" id="setupWork" tabindex="-1" aria-hidden="true"></select>
+  </div>
   <p class="fine" id="setupNote" hidden>Both picks need to be different stations.</p>
   <div class="row" style="margin-top:16px">
     <button class="btn" id="setupLater">Set it up later</button>
@@ -420,13 +427,17 @@
   <h3>Your stations</h3>
   <div class="stack">
     <label class="fine" for="optHome">Home</label>
-    <input class="txt" id="optHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Home list" style="min-height:44px">
-    <div class="suglist" id="optHomeSugs" hidden></div>
-    <select class="txt" id="optHome"></select>
+    <div class="pick">
+      <input class="txt" id="optHomeFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Home station — type to find, tap to pick" style="min-height:44px">
+      <div class="suglist" id="optHomeSugs" hidden></div>
+      <select class="txt picker-select" id="optHome" tabindex="-1" aria-hidden="true"></select>
+    </div>
     <label class="fine" for="optWork">Work</label>
-    <input class="txt" id="optWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Filter the Work list" style="min-height:44px">
-    <div class="suglist" id="optWorkSugs" hidden></div>
-    <select class="txt" id="optWork"></select>
+    <div class="pick">
+      <input class="txt" id="optWorkFind" type="search" placeholder="Type to find a station" autocomplete="off" aria-label="Work station — type to find, tap to pick" style="min-height:44px">
+      <div class="suglist" id="optWorkSugs" hidden></div>
+      <select class="txt picker-select" id="optWork" tabindex="-1" aria-hidden="true"></select>
+    </div>
     <p class="fine">The board shows the next train to Work while you are at Home, and the journey back the other way round. Changing either re-aims the whole board.</p>
   </div>
 
@@ -982,9 +993,9 @@ function maybeOpenSetup(){
   if(store.get("setupSeen", false)) return;
   setupOpened = true;
   store.set("setupSeen", true);
-  $("setupHomeFind").value = ""; $("setupWorkFind").value = "";
   fillStationSelects($("setupHome"), state.ids.home);
   fillStationSelects($("setupWork"), state.ids.work);
+  pickerShows.forEach(f => f());
   setupPreview();
   $("setupSheet").hidden = false; $("scrim2").hidden = false;
   document.body.style.overflow = "hidden";
@@ -1792,35 +1803,41 @@ function fillStationSelects(el, selectedId){
   el.innerHTML = ids.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("");
   if(selectedId && state.names[selectedId]) el.value = selectedId;
 }
+const pickerShows = [];
 function stationFilterPair(selectId, inputId, listId){
   const sel = $(selectId), inp = $(inputId), list = $(listId);
   if(!sel || !inp || !list) return;
+  const nameOf = id => cleanDest((state.names || {})[id] || "");
+  const showSelected = () => { if(document.activeElement !== inp) inp.value = sel.value ? nameOf(sel.value) : ""; };
   const hide = () => { list.hidden = true; list.innerHTML = ""; };
-  inp.addEventListener("input", () => {
-    const q = inp.value.trim().toLowerCase();
+  let tapped = false;
+  const render = (showAll) => {
+    const q = showAll ? "" : inp.value.trim().toLowerCase();
     const ids = Object.keys(state.names || {}).sort((a,b) => cleanDest(state.names[a]).localeCompare(cleanDest(state.names[b])));
     const keep = q ? ids.filter(id => cleanDest(state.names[id]).toLowerCase().includes(q)) : ids;
-    const before = sel.value;
-    sel.innerHTML = keep.length
-      ? keep.map(id => `<option value="${id}">${esc(cleanDest(state.names[id]))}</option>`).join("")
-      : `<option value="">no station matches</option>`;
-    if(keep.includes(before)) sel.value = before;
-    if(sel.value !== before) sel.dispatchEvent(new Event("change", { bubbles: true }));
-    if(!q){ hide(); return; }
-    list.innerHTML = keep.slice(0, 7).map(id =>
-        `<button type="button" class="sug" data-id="${id}">${esc(cleanDest(state.names[id]))}</button>`).join("")
-      + (keep.length > 7 ? `<span class="sug more">${keep.length - 7} more — open the list below</span>` : "")
-      + (!keep.length ? `<span class="sug more">no station matches that</span>` : "");
+    if(!keep.length){ list.innerHTML = `<span class="sug more">no station matches “${esc(q)}”</span>`; list.hidden = false; return; }
+    list.innerHTML = keep.map(id =>
+      `<button type="button" class="sug${id === sel.value ? " on" : ""}" data-id="${id}">${esc(cleanDest(state.names[id]))}</button>`).join("");
     list.hidden = false;
-  });
+    const on = list.querySelector(".sug.on");
+    if(on && document.activeElement === inp) on.scrollIntoView({ block:"nearest" });
+  };
+  inp.addEventListener("focus", () => { try{ inp.select(); }catch(e){} render(true); });
+  inp.addEventListener("input", () => render());
+  inp.addEventListener("blur", () => setTimeout(() => { if(tapped){ tapped = false; return; } hide(); showSelected(); }, 220));
+  list.addEventListener("pointerdown", () => { tapped = true; });
   list.addEventListener("click", e => {
     const b = e.target.closest && e.target.closest("button.sug");
     if(!b) return;
+    tapped = true;
     const before = sel.value;
     fillStationSelects(sel, b.dataset.id);
-    inp.value = ""; hide();
+    inp.value = nameOf(b.dataset.id); hide();
     if(sel.value !== before) sel.dispatchEvent(new Event("change", { bubbles: true }));
+    inp.blur();
   });
+  sel.addEventListener("change", () => setTimeout(showSelected, 0));
+  pickerShows.push(showSelected);
 }
 stationFilterPair("setupHome","setupHomeFind","setupHomeSugs");
 stationFilterPair("setupWork","setupWorkFind","setupWorkSugs");
@@ -1983,8 +2000,8 @@ $("btnShowAll").addEventListener("click", () => {
 let sheetReturnFocus = null;
 function openSheet(){
   syncSheet();
-  $("optHomeFind").value = ""; $("optWorkFind").value = "";
   fillStationSelects($("optHome"), state.ids.home); fillStationSelects($("optWork"), state.ids.work);
+  pickerShows.forEach(f => f());
   sheetReturnFocus = document.activeElement;
   $("sheet").hidden = false; $("scrim").hidden = false;
   document.body.style.overflow = "hidden";
@@ -2177,6 +2194,9 @@ let geoDeferred = !store.get("setupSeen", false);
 if(settings.geoOn && !geoDeferred){ startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
 const NOTES = {
+  "1.5.5": [
+    "Station picking is one box now. Tap it and the stations drop down under it; type and the list narrows; tap a name and the box keeps it. The separate dropdown, and its popup, are gone."
+  ],
   "1.5.4": [
     "When TfL pushes a train back you now see how far: an amber '+5 late' on the card, in the list and on the route sheet.",
     "Each train shows the time it is expected at your other station, read from that station's own live board.",
