@@ -3,6 +3,13 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.7 — 2026-11-16
+
+- Dropped the "Direct · no changes" fact pill from the journey card: it was a
+  hardcoded constant (every offered train on a single-line board is direct by
+  construction) dressed up as a computed fact; the real facts — trains in the
+  next hour, usual platform, sample-data warning — stay
+
 ## 1.5.6 — 2026-11-16
 
 - Line status rebuilt around one gesture: a new problem shows as a card whose whole body

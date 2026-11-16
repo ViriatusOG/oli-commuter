@@ -1231,7 +1231,6 @@ function renderJourney(){
   const soon = decorate(state.arrivals).filter(d => isGood(d) && d.minutes >= 0 && d.minutes <= 60).length;
   if(soon) facts.push(`<span class="fact"><b>${soon}</b> in the next hour</span>`);
   if(plat) facts.push(`<span class="fact">Usually <b>platform ${esc(plat)}</b></span>`);
-  facts.push(`<span class="fact">Direct · <b>no changes</b></span>`);
   if(settings.demo) facts.push(`<span class="fact" style="color:var(--warn)">Sample data</span>`);
   $("facts").innerHTML = facts.join("");
 }
@@ -2270,6 +2269,9 @@ let geoDeferred = !store.get("setupSeen", false);
 if(settings.geoOn && !geoDeferred){ startGeoWatch(); pollGeoOnce(); }
 if(isNativeApp() && Date.now() - state.updateCheckedAt > UPDATE.staleMs){ UPDATE.check(false); }
 const NOTES = {
+  "1.5.7": [
+    "The \u201cDirect \u00b7 no changes\u201d pill is gone. Every train on this board already runs straight to your other station \u2014 saying so on every screen was noise, not news."
+  ],
   "1.5.6": [
     "Line-status notices now fit the app: a new problem slides in as a card — tap it for the full story in a proper sheet.",
     "Swipe the notice away (or tap its cross) and a small pill stays up top; tap the pill any time to read it all again.",
