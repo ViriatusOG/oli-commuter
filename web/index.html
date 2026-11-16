@@ -17,7 +17,7 @@
   :root{
     --el:#6600cc; --el-2:#4a009a; --el-soft:#efe7ff;
     --bg:#f3f2f7; --card:#ffffff; --ink:#141219; --ink-2:#4b4757; --muted:#6c6779;
-    --line:#e2dfeb; --line-strong:#cdc8dd;
+    --line:#e2dfeb; --line-strong:#cdc8dd; --edge:#8e89a8;
     --ok:#0a7a3c; --ok-soft:#e3f5ea; --warn:#8a5300; --warn-soft:#fdf0dc; --bad:#b3122f; --bad-soft:#fde7ea;
     --shadow:0 1px 2px rgba(18,10,40,.06), 0 8px 24px -12px rgba(18,10,40,.18);
     --late:#96550b; --late-soft:#fff2d9; --late-line:#e9c887;
@@ -26,7 +26,7 @@
   html[data-theme="dark"]{
     --el:#a680ff; --el-2:#5c17c9; --el-soft:#241640;
     --bg:#0d0c12; --card:#17161f; --ink:#f1eff7; --ink-2:#c9c4d6; --muted:#9d98ae;
-    --line:#292733; --line-strong:#6a6490;
+    --line:#292733; --line-strong:#6a6490; --edge:#6a6490;
     --ok:#4ad08a; --ok-soft:#12291d; --warn:#f0b95e; --warn-soft:#2b2113; --bad:#ff8095; --bad-soft:#2e1419;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -14px rgba(0,0,0,.7);
     --late:#ffc46b; --late-soft:#3a2c12; --late-line:#6d5320;
@@ -45,18 +45,23 @@
   .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   :focus-visible{outline:3px solid color-mix(in srgb, var(--el) 55%, transparent); outline-offset:2px; border-radius:8px}
 
-  .app{width:100%; max-width:540px; padding:calc(10px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:14px;
+  /* The Settings button sits in the footer now, so nothing needs to reserve a
+     floating button's landing band.  The bottom padding is ordinary page space. */
+  .app{width:100%; max-width:540px; padding:calc(10px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:14px;
        transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
   .app.is-pulling{transition:none}
 
-  /* ---------- one-thumb reach: the single button that remains ---------- */
-  .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:35;
-       width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--card);
-       box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;
-       transition:transform .2s ease,opacity .2s ease}
-  .fab.hide{transform:translateY(90px);opacity:0;pointer-events:none}
-  html[data-theme="dark"] .fab{background:#232030;border-color:#514b6b}
-  .fab svg{width:24px;height:24px}
+  /* ---------- one-thumb reach: the single button, docked in the footer ----------
+     It used to float at the bottom right, on top of whatever row was there and
+     in a band the page had to keep empty.  Docked, it is always in reach, never
+     on top of a row, and doubles as the footer's edge control. */
+  .fab{width:44px;height:44px;border-radius:14px;border:1px solid var(--edge);background:var(--card);
+       color:var(--ink-2);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;
+       flex:0 0 auto;transition:transform .2s ease}
+  /* docked, the button sits on the card surface: its boundary has to read as
+     a control at night, not a smudge (--line-strong clears 3:1 against --card) */
+  html[data-theme="dark"] .fab{background:#232030;border-color:var(--line-strong);color:var(--ink)}
+  .fab svg{width:22px;height:22px}
   .fab:active{transform:scale(.94)}
   .hero{cursor:pointer}
   .dep{cursor:pointer}
@@ -111,6 +116,8 @@
   .banner[data-sev="warn"]{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb, currentColor 28%, transparent)}
   .banner[data-sev="good"]{width:fit-content;display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;
       background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb, currentColor 24%, transparent);font-size:.78rem;font-weight:600}
+  /* as a pill it may stay compact; as the button that opens status, it is 44 px */
+  button.banner[data-sev="good"]{min-height:44px;padding:6px 14px}
   .banner[data-sev="good"] .dotg{width:8px;height:8px;border-radius:50%;background:currentColor}
   .banner[data-sev="update"]{background:var(--el-soft);color:var(--ink);border:1px solid color-mix(in srgb, var(--el) 30%, transparent)}
   .banner[data-sev="update"] b{color:var(--ink)}
@@ -182,7 +189,7 @@
 
   /* ---------- list ---------- */
   .list{padding:6px 14px 12px}
-  .list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 6px}
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0 4px;flex-wrap:wrap;min-height:44px}
   .list-head h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
   .link-btn{background:none;border:0;color:var(--el);font-weight:700;font-size:.84rem;cursor:pointer;padding:8px;border-radius:10px;min-height:44px}
   .deps li+li{border-top:1px solid var(--line)}
@@ -251,12 +258,14 @@
   .sheet h2{font-size:1.12rem;letter-spacing:-.01em;margin-bottom:2px}
   .sheet .lede{font-size:.84rem;color:var(--muted);margin-bottom:14px}
   .field{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
+  label.field:active{background:color-mix(in srgb, var(--el) 6%, transparent)}
   .field .lbl{flex:1 1 auto;min-width:0}
   .field .lbl b{display:block;font-size:.94rem;font-weight:750}
   .field .lbl span{display:block;font-size:.78rem;color:var(--muted);line-height:1.35}
-  .switch{position:relative;width:56px;height:34px;flex:0 0 auto}
+  /* the pill stays 34 px tall; the box around it is a 44 px-thumb touch area */
+  .switch{position:relative;width:56px;height:44px;flex:0 0 auto;display:grid;place-items:center}
   .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
-  .switch i{position:absolute;inset:0;border-radius:99px;background:var(--line-strong);transition:background .18s;pointer-events:none}
+  .switch i{position:relative;width:56px;height:34px;border-radius:99px;background:var(--line-strong);transition:background .18s;pointer-events:none}
   .switch i::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .18s}
   .switch input:checked+i{background:var(--el)}
   .switch input:checked+i::after{transform:translateX(22px)}
@@ -295,12 +304,33 @@
   select.txt{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(-45deg,transparent 50%,var(--muted) 50%);background-position:right 16px center,right 11px center;background-size:5px 5px;background-repeat:no-repeat}
 
   /* ---------- larger screens ---------- */
+  /* ---------- short viewports: the glance still leads, the extras tuck ----------
+     Two steps, not one cliff: mid-height phones keep the "via" disclosure at a
+     quieter size; phones under ~720 px drop it and tighten the chrome so the
+     first departures are still above the fold. */
+  @media (max-height:780px) and (min-height:721px){
+    .hero .via-box{margin-top:2px;padding-top:2px}
+    .hero .via-box summary{min-height:38px;font-size:.78rem}
+    .hero .meta{gap:4px}
+    .hero .chip{font-size:.74rem;padding:4px 9px}
+    .facts{gap:4px;margin-top:8px}
+    .fact{font-size:.75rem;padding:4px 9px}
+    .dep{padding:10px 0}
+  }
   @media (max-height:720px){
-    .hero{padding:12px 14px 10px;border-radius:14px}
+    .hero{padding:10px 14px 10px;border-radius:14px}
     .hero .cd{font-size:clamp(2.2rem,12vw,3rem)}
     .hero .when{margin-top:2px}
+    .hero .kicker{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hero .meta{gap:4px;margin-top:6px}
+    .hero .chip{font-size:.72rem;padding:4px 8px}
+    .hero .via-box{display:none}
     .journey{padding:10px 12px}
-    .facts{margin-top:8px}
+    .journey .route-strip{margin-bottom:4px}
+    .facts{margin-top:8px;gap:4px}
+    .fact{font-size:.74rem;padding:3px 8px}
+    #listCard .list-head{padding-top:0;padding-bottom:2px}
+    .dep{padding:9px 0}
   }
   @media (min-width:860px){
     .app{max-width:840px;gap:14px}
@@ -373,14 +403,13 @@
     <span id="updated">Loading…</span>
     <span class="grow"></span>
     <button class="link-btn" id="btnPause" aria-pressed="false" style="font-size:.78rem">Pause updates</button>
+    <button class="fab" id="btnSettings" aria-label="Open settings" title="Open settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
+    </button>
   </footer>
 
   <p class="sr-only" role="status" aria-live="polite" id="announce"></p>
 </div>
-
-  <button class="fab" id="btnSettings" aria-label="Open settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
-</button>
 
 <div id="scrim" class="scrim" hidden></div>
 <div id="scrim2" class="scrim" hidden></div>
@@ -463,34 +492,34 @@
   </div>
 
   <h3>Alerts</h3>
-  <div class="field">
+  <label class="field" for="optAlerts">
     <span class="lbl"><b>Buzz me when the train is close</b><span>Buzzes once when the next train is within your warning time, while the app is on screen.</span></span>
-    <label class="switch"><input type="checkbox" id="optAlerts"><i></i></label>
-  </div>
+    <span class="switch"><input type="checkbox" id="optAlerts"><i></i></span>
+  </label>
   <div class="field">
     <span class="lbl"><b>Warn me this far ahead</b><span>Minutes before it arrives.</span></span>
     <select class="txt" id="optAlertMins" style="width:110px"><option>1</option><option>2</option><option>3</option><option>5</option></select>
   </div>
 
   <h3>Location</h3>
-  <div class="field">
+  <label class="field" for="optGeo">
     <span class="lbl"><b>Use my location</b><span>Works out which of the two stations you are standing at, and sets the direction for you. Only while this app is open.</span></span>
-    <label class="switch"><input type="checkbox" id="optGeo"><i></i></label>
-  </div>
+    <span class="switch"><input type="checkbox" id="optGeo"><i></i></span>
+  </label>
   <div class="stack">
     <p class="fine" id="geoState">Not asked yet.</p>
     <div class="row"><button class="btn" id="btnGeoNow">Check again</button></div>
   </div>
 
   <h3>The board</h3>
-  <div class="field">
+  <label class="field" for="optAuto">
     <span class="lbl"><b>Refresh every 20 seconds</b><span>Switch off if your signal is poor; refresh by hand instead.</span></span>
-    <label class="switch"><input type="checkbox" id="optAuto"><i></i></label>
-  </div>
-  <div class="field">
+    <span class="switch"><input type="checkbox" id="optAuto"><i></i></span>
+  </label>
+  <label class="field" for="optShowAll">
     <span class="lbl"><b>Show trains that miss this station</b><span>Everything else on the line, greyed out, with the reason.</span></span>
-    <label class="switch"><input type="checkbox" id="optShowAll"><i></i></label>
-  </div>
+    <span class="switch"><input type="checkbox" id="optShowAll"><i></i></span>
+  </label>
   <div class="field">
     <span class="lbl"><b>Appearance</b><span>Follows the phone unless you pick one.</span></span>
     <select class="txt" id="optTheme" style="width:130px"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select>
@@ -512,10 +541,10 @@
   </div>
 
   <h3>If you want a look with no signal</h3>
-  <div class="field">
+  <label class="field" for="optDemo">
     <span class="lbl"><b>Sample departures</b><span>Pretend times for trying the layout. Always labelled on screen.</span></span>
-    <label class="switch"><input type="checkbox" id="optDemo"><i></i></label>
-  </div>
+    <span class="switch"><input type="checkbox" id="optDemo"><i></i></span>
+  </label>
   <div class="stack">
     <div class="row"><button class="btn danger" id="btnReset">Clear saved data</button></div>
     <p class="fine" id="homeTip">Tip: use your browser’s <b>Add to Home screen</b> (or <b>Add to Home Screen</b> on iPhone) to get this as an app icon that opens straight on the direction you use most.</p>
@@ -2094,17 +2123,14 @@ document.addEventListener("click", e => {
   if(!f) return;
   const sw = f.querySelector(".switch input");
   if(!sw || e.target.closest(".switch") || e.target.closest("select")) return;
+  /* the field is a <label> now, so let this handler be the only toggle */
+  if(f.tagName === "LABEL") e.preventDefault();
   sw.checked = !sw.checked;
   sw.dispatchEvent(new Event("change", { bubbles: true }));
 });
-let fabLast = 0;
-addEventListener("scroll", () => {
-  const y = window.scrollY, b = $("btnSettings");
-  if(!$("sheet").hidden){ b.classList.remove("hide"); return; }
-  if(y > 90 && y > fabLast + 3) b.classList.add("hide");
-  else if(y < fabLast - 3 || y <= 90) b.classList.remove("hide");
-  fabLast = y;
-}, { passive: true });
+/* The Settings button used to leave the screen when you scrolled. Docked in the
+   footer it is always in reach, so the scroll-hide listener and its .fab.hide
+   rule are gone; a now-static footer element takes neither. */
 $("scrim").addEventListener("click", closeSheet);
 function closeTopSheet(){
   if(!$("routeSheet").hidden){ closeRouteSheet(); return true; }

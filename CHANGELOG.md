@@ -3,7 +3,22 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
-## 1.5.7 — 2026-11-16
+## 1.5.8 — 2026-11-16
+
+Docked Settings button, a thumb-sized switch box, and short screens that show departures
+
+- The Settings button is docked in the footer, next to the status line: always in reach,
+  never on top of a departure row or the location line at rest, and no longer costing the
+  page a reserved band of empty space at the bottom
+- Every settings toggle row is now a label: tapping anywhere on it flips the switch
+  once, in either direction, and the pill has a 44 px touch box while staying its size
+- The "All good" pill, which opens the status sheet, is a 44 px button
+- On short screens the glance still leads but the "via" disclosure and chip band tuck
+  in two steps, so the first departures stay above the fold (all four fit at 412×892)
+- The list header tightens and wraps cleanly, and the journey card keeps its spacing
+- The Settings button's outline now reads as a control in both appearances, with the
+  light-mode edge lifted to 3:1 and the dark one kept at 3:1
+
 
 - Dropped the "Direct · no changes" fact pill from the journey card: it was a
   hardcoded constant (every offered train on a single-line board is direct by
