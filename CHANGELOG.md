@@ -3,6 +3,18 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
+## 1.5.6 — 2026-11-16
+
+- Line status rebuilt around one gesture: a new problem shows as a card whose whole body
+  is tappable and opens a proper sheet with the complete, unbroken description; swiping the
+  card away (or tapping its cross) collapses it to a compact severity pill that stays up
+  top and reopens the sheet on tap; the card returns automatically when the status changes
+- The "Read the rest" split dropped characters (off-by-one on the ellipsis — "As we deal"
+  arrived as "e we deal"); the preview is now a CSS line-clamp over the whole text and the
+  sheet carries it in one piece
+- Good service and the dismissed pill are real buttons (Enter/Space work); the sheet joins
+  the back/Escape close chain and the drag-down-to-close family
+
 ## 1.5.5 — 2026-11-16
 
 - The station picker is a single combobox: the box itself shows the current

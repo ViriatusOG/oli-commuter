@@ -66,8 +66,11 @@ id is `com.localtools.olicommuter`.
   useless to you.
 - **Line status you can read at a glance.** A small green "All good" pill when the line is
   fine; amber when there is a problem on the line; red, with an *on your route* badge, when the
-  problem hits your two stations. The 20-second refresh can be paused; the board keeps the last
-  real times and labels them as remembered rather than live if the signal drops.
+  problem hits your two stations. A new problem arrives as a card showing the first lines —
+  swipe it away, or tap its cross, and a small pill stays behind; tap the pill any time and the
+  full story opens in a sheet. It returns on its own when TfL says something new. The
+  20-second refresh can be paused; the board keeps the last real times and labels them as
+  remembered rather than live if the signal drops.
 - **Alerts** buzz once when the next train is within your warning time, while the app is on
   screen.
 - **One-handed by design.** One button on screen, where your thumb already is: Settings.
