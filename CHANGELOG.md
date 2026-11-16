@@ -3,7 +3,19 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
-## 1.5.8 — 2026-11-16
+## 1.5.9 — 2026-11-16
+
+Settings floats again, and only steps aside while you scroll
+
+- The Settings button is a floating one again at the bottom right: it stays put at rest,
+  including at the very top of the board, and while you scroll it slips out of the way
+  so the last visible row's detail is never hidden behind it — then returns the moment
+  scrolling stops
+- It does not slip away while a sheet is open, or during a pull-to-refresh
+- The page no longer keeps a whole empty 96 px band for the button underneath; the
+  footer's own controls clear it instead, so nothing is permanently unreachable
+- Its outline has more contrast on both appearances now that it floats over the page
+
 
 Docked Settings button, a thumb-sized switch box, and short screens that show departures
 

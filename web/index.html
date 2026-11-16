@@ -17,7 +17,7 @@
   :root{
     --el:#6600cc; --el-2:#4a009a; --el-soft:#efe7ff;
     --bg:#f3f2f7; --card:#ffffff; --ink:#141219; --ink-2:#4b4757; --muted:#6c6779;
-    --line:#e2dfeb; --line-strong:#cdc8dd; --edge:#8e89a8;
+    --line:#e2dfeb; --line-strong:#cdc8dd; --edge:#858094;
     --ok:#0a7a3c; --ok-soft:#e3f5ea; --warn:#8a5300; --warn-soft:#fdf0dc; --bad:#b3122f; --bad-soft:#fde7ea;
     --shadow:0 1px 2px rgba(18,10,40,.06), 0 8px 24px -12px rgba(18,10,40,.18);
     --late:#96550b; --late-soft:#fff2d9; --late-line:#e9c887;
@@ -26,7 +26,7 @@
   html[data-theme="dark"]{
     --el:#a680ff; --el-2:#5c17c9; --el-soft:#241640;
     --bg:#0d0c12; --card:#17161f; --ink:#f1eff7; --ink-2:#c9c4d6; --muted:#9d98ae;
-    --line:#292733; --line-strong:#6a6490; --edge:#6a6490;
+    --line:#292733; --line-strong:#6a6490; --edge:#7c7597;
     --ok:#4ad08a; --ok-soft:#12291d; --warn:#f0b95e; --warn-soft:#2b2113; --bad:#ff8095; --bad-soft:#2e1419;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -14px rgba(0,0,0,.7);
     --late:#ffc46b; --late-soft:#3a2c12; --late-line:#6d5320;
@@ -51,16 +51,22 @@
        transition:transform .25s cubic-bezier(.2,.8,.3,1.15)}
   .app.is-pulling{transition:none}
 
-  /* ---------- one-thumb reach: the single button, docked in the footer ----------
-     It used to float at the bottom right, on top of whatever row was there and
-     in a band the page had to keep empty.  Docked, it is always in reach, never
-     on top of a row, and doubles as the footer's edge control. */
-  .fab{width:44px;height:44px;border-radius:14px;border:1px solid var(--edge);background:var(--card);
+  /* ---------- one-thumb reach: the single button, floating again ----------
+     It floats at the bottom right and stays out of the way the way it used to:
+     hidden only while the board is actually being scrolled, then back the
+     moment scrolling stops — or whenever the board is at rest, including the
+     very top.  It still sits over rows when shown, as it always did, but the
+     page no longer reserves an empty band beneath it. */
+  .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:35;
+       width:44px;height:44px;border-radius:14px;border:1px solid var(--edge);background:var(--card);
        color:var(--ink-2);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;
-       flex:0 0 auto;transition:transform .2s ease}
-  /* docked, the button sits on the card surface: its boundary has to read as
-     a control at night, not a smudge (--line-strong clears 3:1 against --card) */
-  html[data-theme="dark"] .fab{background:#232030;border-color:var(--line-strong);color:var(--ink)}
+       transition:transform .2s ease,opacity .2s ease}
+  /* off screen, it takes no taps while scrolling, so rows under it are live */
+  .fab.hide{transform:translateY(92px);opacity:0;pointer-events:none}
+  .fab.hide:active{transform:translateY(92px) scale(1)}
+  /* a floating control sits on the page surface; its boundary has to read as
+     a control at night, not a smudge (--edge clears 3:1 both appearances) */
+  html[data-theme="dark"] .fab{background:#232030;border-color:var(--edge);color:var(--ink)}
   .fab svg{width:22px;height:22px}
   .fab:active{transform:scale(.94)}
   .hero{cursor:pointer}
@@ -237,7 +243,9 @@
   .skel-row .a{height:44px;border-radius:12px}
 
   /* ---------- footer ---------- */
-  .foot{display:flex;align-items:center;gap:10px;padding:2px 4px;font-size:.78rem;color:var(--muted);white-space:nowrap}
+  /* the floating gear owns the bottom-right corner, so the footer's controls
+     clear it on the last line rather than being covered at maximum scroll */
+  .foot{display:flex;align-items:center;gap:10px;padding:2px 4px calc(4px + 44px + 8px);font-size:.78rem;color:var(--muted);white-space:nowrap}
   .foot #updated{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .foot .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:0 0 auto}
   .foot .dot.ok{background:var(--ok)}
@@ -403,13 +411,14 @@
     <span id="updated">Loading…</span>
     <span class="grow"></span>
     <button class="link-btn" id="btnPause" aria-pressed="false" style="font-size:.78rem">Pause updates</button>
-    <button class="fab" id="btnSettings" aria-label="Open settings" title="Open settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
-    </button>
   </footer>
 
   <p class="sr-only" role="status" aria-live="polite" id="announce"></p>
 </div>
+
+  <button class="fab" id="btnSettings" aria-label="Open settings" title="Open settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
+  </button>
 
 <div id="scrim" class="scrim" hidden></div>
 <div id="scrim2" class="scrim" hidden></div>
@@ -2128,9 +2137,29 @@ document.addEventListener("click", e => {
   sw.checked = !sw.checked;
   sw.dispatchEvent(new Event("change", { bubbles: true }));
 });
-/* The Settings button used to leave the screen when you scrolled. Docked in the
-   footer it is always in reach, so the scroll-hide listener and its .fab.hide
-   rule are gone; a now-static footer element takes neither. */
+/* The Settings button floats at the bottom right and steps out of the way while
+   the board is scrolling, so a row's detail is never hidden until you stop. It
+   is back after a short pause with no scroll events — the board at rest always
+   shows it, the very top included — and stays put whenever a sheet is open over
+   the board, since then the board behind it is not being read. */
+let fabQuiet = 0;
+const FAB_PAUSE = 180;   // ms of no scroll before the button is shown again
+function showFab(){
+  clearTimeout(fabQuiet);
+  fabQuiet = setTimeout(() => $("btnSettings").classList.remove("hide"), FAB_PAUSE);
+}
+/* the board is at rest at load: the timer above just clears any stale hide */
+addEventListener("scroll", () => {
+  const b = $("btnSettings");
+  clearTimeout(fabQuiet);
+  /* a sheet on top means the board behind it is not being read: keep it put */
+  if(!$("sheet").hidden || !$("routeSheet").hidden || !$("setupSheet").hidden){ b.classList.remove("hide"); return; }
+  b.classList.add("hide");
+  /* and back once the scroll settles — the board at rest always shows it */
+  fabQuiet = setTimeout(() => b.classList.remove("hide"), FAB_PAUSE);
+}, { passive: true });
+/* a pause with no new scroll event after the last movement means resting */
+showFab();
 $("scrim").addEventListener("click", closeSheet);
 function closeTopSheet(){
   if(!$("routeSheet").hidden){ closeRouteSheet(); return true; }
