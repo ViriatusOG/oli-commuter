@@ -3,7 +3,28 @@
 Worth-noting changes only. The version in `package.json` and `versionName` in
 `android/app/build.gradle` move together; tags are the version with a `v` in front.
 
-## 1.5.9 — 2026-11-16
+## 1.6.0 — 2026-11-17
+
+Location works again: it reads the permission the phone actually granted
+
+- Fixed: with permission granted the app still never worked out which station you were at.
+  It read only the *fine* location state, so "fine denied, coarse granted" (the usual
+  Android case, and what the plugin itself falls back to on Android 12+) was taken as
+  "permission denied" — the board sat on "Finding you…" and the direction stayed manual.
+  Coarse alone, fine alone, and "prompt / prompt-with-rationale" are all handled now
+- Fixed: a denied permission was shown as "Location is off — tap to switch on", and
+  tapping it only switched the setting on. It now says what it is, and tapping asks the
+  phone again — the way to grant "Allow while using the app" when the dialog still appears.
+  After "Don't ask again" it still points to Settings › Apps › this app › Location
+- Permission is resolved before any fix is requested, so a refused watch no longer
+  poisons the state for good
+- A fix now retries once with a longer timeout and a fresh cache before giving up, so
+  a first-timeout indoors is not the end of it
+- Fixed: station coordinates get topped up with one cheap route call when the cached
+  line map has stops but no lat/lon, so an older cache no longer leaves location blind
+- Honest copy for each state: "No location permission", "Couldn't find you",
+  "Location found · still matching stations", "Location not asked yet"
+
 
 Settings floats again, and only steps aside while you scroll
 

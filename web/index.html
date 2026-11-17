@@ -711,11 +711,26 @@ function geoErrorState(e){
 async function askGeoPermission(){
   if(!settings.geoOn) return "off";
   if(NativeGeo){
+    /* Capacitor reports four states per alias — granted / denied / prompt /
+       prompt-with-rationale — and the plugin itself falls back from fine to
+       COARSE on Android 12+, so "fine denied, coarse granted" is a perfectly
+       usable setup. Reading only `location` collapsed all of that into
+       "denied", which left the board on "Finding you…" forever. */
     try{
-      const r = await NativeGeo.requestPermissions();
-      const st = r && (r.location === "granted" ? r.location : r.coarseLocation);
-      geo.state = st === "granted" ? "ok" : "denied";
-      if(geo.state === "denied") geo.error = "Location permission refused on the phone.";
+      const r = (await NativeGeo.requestPermissions()) || {};
+      const fine = r.location, coarse = r.coarseLocation;
+      const usable = (v) => v === "granted";
+      if(usable(fine) || usable(coarse)){
+        geo.state = "ok";
+        if(!usable(fine) && usable(coarse)) geo.coarseOnly = true;
+        return geo.state;
+      }
+      /* never asked / asked but still pending: ask again, then proceed */
+      if(fine === "prompt" || coarse === "prompt" || fine === "prompt-with-rationale" || coarse === "prompt-with-rationale"){
+        geo.state = "prompt"; return geo.state;
+      }
+      geo.state = "denied";
+      geo.error = "Location permission refused on the phone.";
       return geo.state;
     }catch(e){ geo.state = "error"; geo.error = String(e && e.message || e); return "error"; }
   }
@@ -724,17 +739,28 @@ async function askGeoPermission(){
     if(navigator.permissions){
       const p = await navigator.permissions.query({ name:"geolocation" });
       geo.state = p.state === "granted" ? "ok" : p.state === "denied" ? "denied" : "prompt";
-      p.onchange = () => { geo.state = p.state === "granted" ? "ok" : p.state === "denied" ? "denied" : "prompt"; renderGeo(); };
+      p.onchange = () => { geo.state = p.state === "granted" ? "ok" : p.state === "denied" ? "denied" : "prompt"; renderGeo(); syncSheet(); };
+    }else{
+      geo.state = "prompt";
     }
     return geo.state;
-  }catch(e){ return "prompt"; }
+  }catch(e){
+    /* no Permissions API here (or it refused to answer): the browser will ask
+       on the first geolocation call, so say "not answered yet", not a stale state */
+    geo.state = "prompt"; geo.error = null;
+    return geo.state;
+  }
 }
 
-function readPositionOnce(){
+/* A single fix with one hard timeout is thin indoors or amid a busy platform:
+   the plugin answers "could not obtain location in time" and the app would stop
+   there. Try once more with a longer timeout and a fresher cache first. */
+function readPositionOnce(retry){
+  const opts = Object.assign({}, GEO_OPTS, retry ? { timeout:30000, maximumAge:0 } : {});
   return new Promise((resolve, reject) => {
-    if(NativeGeo){ NativeGeo.getCurrentPosition(GEO_OPTS).then(resolve, reject); return; }
+    if(NativeGeo){ NativeGeo.getCurrentPosition(opts).then(resolve, reject); return; }
     if(!navigator.geolocation){ reject(new Error("No location support here.")); return; }
-    navigator.geolocation.getCurrentPosition(resolve, reject, GEO_OPTS);
+    navigator.geolocation.getCurrentPosition(resolve, reject, opts);
   });
 }
 
@@ -779,9 +805,18 @@ function startGeoWatch(){
   stopGeoWatch();
   if(!settings.geoOn) return;
   if(NativeGeo){
-    NativeGeo.watchPosition(GEO_OPTS, onPosition)
-      .then(id => { geo.watchId = id; })
-      .catch(e => { geo.watch = null; pollGeoOnce(); });
+    /* This plugin requests permission itself, then hands back a watch id; a
+       refused permission or a fix error arrives at the *callback*, never the
+       promise. While permission is still pending that is not a failure of the
+       whole feature, so the callback defers to pollGeoOnce's permission step. */
+    NativeGeo.watchPosition(GEO_OPTS, (result, err) => {
+      if(err && (!result || !result.coords)){
+        if(geo.state === "ok") geoFail(err);
+        else pollGeoOnce();
+        return;
+      }
+      onPosition(result);
+    }).then(id => { geo.watchId = id; }).catch(e => { geo.watch = null; pollGeoOnce(); });
     return;
   }
   if(navigator.geolocation){
@@ -806,16 +841,21 @@ function stopGeoWatch(){
 async function pollGeoOnce(){
   if(!settings.geoOn) return;
   try{
-    if(geo.state === "idle" || geo.state === "prompt"){
+    /* permission first, whatever the state says: this plugin requests it
+       itself, and an earlier watch error may have poisoned the state */
+    if(geo.state !== "denied" && geo.state !== "unsupported" && geo.state !== "off"){
       const st = await askGeoPermission();
-      if(st === "denied" || st === "unsupported" || st === "off"){ renderGeo(); return; }
+      /* a refusal ends it; "prompt" means not answered yet, so still try a
+         fix — the first geolocation call is what actually asks the browser */
+      if(st === "denied" || st === "unsupported" || st === "off"){ renderGeo(); syncSheet(); return; }
     }
-    onPosition(await readPositionOnce());
+    onPosition(await readPositionOnce(false));
   }catch(e){
     if(geo.state === "prompt"){
-      try{ const st = await askGeoPermission(); if(st !== "granted"){ renderGeo(); return; } }catch(err){}
+      try{ const st = await askGeoPermission(); if(st !== "ok"){ renderGeo(); syncSheet(); return; } }catch(err){ geo.state = "prompt"; }
     }
-    geoFail(e);
+    /* one retry with a longer timeout, then the honest failure */
+    try{ onPosition(await readPositionOnce(true)); return; }catch(e2){ geoFail(e2 || e); }
   }
 }
 
@@ -823,11 +863,22 @@ function geoStatusLine(){
   if(!settings.geoOn) return "Location is off. The two buttons set the direction instead.";
   if(geo.state === "denied") return "Your phone is refusing location. Allow it in Settings › Apps › this app › Location, or pick the direction by hand.";
   if(geo.state === "unsupported") return "This browser will not share location with the page.";
-  if(geo.state === "error") return "Location failed: " + (geo.error || "unknown reason") + ". The buttons still work.";
+  if(geo.state === "error"){
+    const why = String(geo.error || "").replace(/^OS-PLUG-GLOC-\d+\s*/, "").replace(/\s*[.!]+\s*$/,"");
+    return "Location failed: " + (why || "unknown reason") + ". Tap the line to try again; the buttons still work.";
+  }
+  if((geo.state === "prompt" || geo.state === "idle") && !geo.pos) return "Location not asked yet — tap the line below to ask your phone.";
+  /* coarse permission alone is plenty for "which station am I at", and worth
+     saying plainly rather than pretending it is missing */
+  if(geo.coarseOnly){
+    const n1 = nearestStation();
+    const where = n1 ? ` — nearest station ${STATIONS[n1.key].label}, ${fmtDist(n1.metres)}.` : ".";
+    return "Using approximate location (precise location was not granted)" + where;
+  }
   if(!geo.pos) return isNativeApp() ? "Waiting for a GPS fix…" : "Waiting for the browser to share your position…";
   const n = nearestStation();
   const when = "last fix " + fmtClock(new Date(geo.at));
-  if(!n) return "Position known (" + when + "), but TfL's station coordinates are not cached yet.";
+  if(!n) return "Position known (" + when + ") — TfL's station coordinates have not been cached yet; tapping the line retries the line map.";
   return `Position known to about ${fmtDist(geo.accuracy)}, ${when}. Nearest station: ${STATIONS[n.key].label}, ${fmtDist(n.metres)}.`;
 }
 
@@ -842,20 +893,31 @@ function renderGeo(){
     line.dataset.act = "on"; return;
   }
   if(geo.state === "denied"){
-    txt.textContent = "Location is off — tap to switch on";
-    line.title = "Turn on location";
-    line.dataset.act = "on"; return;
+    /* a refusal is not "off": say what it is, and let a tap ask the phone again */
+    txt.innerHTML = "No location permission — <b>tap to ask again</b>";
+    line.title = "Allow location in the phone's settings, then tap to retry";
+    line.dataset.act = "retry"; return;
+  }
+  if(geo.state === "error"){
+    txt.innerHTML = "<b>Couldn't find you</b> — tap to try again";
+    line.title = geo.error || "Location failed";
+    line.dataset.act = "refresh"; return;
   }
   if(geo.state === "unsupported"){
     txt.textContent = "Location unavailable — pick the direction below";
     line.dataset.act = "none"; return;
   }
   if(!geo.pos){
-    txt.textContent = "Finding you…";
+    txt.innerHTML = (geo.state === "prompt" || geo.state === "idle")
+      ? "<b>Tap to find you</b> · asking is one tap"
+      : "Finding you…";
     line.dataset.act = "refresh"; return;
   }
   if(!n){
-    txt.textContent = "Can't tell where you are — tap to try again";
+    /* a fix without station coordinates is not "can't tell where you are":
+       say which half of the answer is still missing */
+    txt.innerHTML = "Location found · <b>still matching stations</b>";
+    line.title = "Tap to retry the line map";
     line.dataset.act = "refresh"; return;
   }
   line.dataset.act = "refresh";
@@ -951,6 +1013,21 @@ async function loadGraph(force){
   store.set("graph", { at:state.graphAt, nodes, names, coords, seqIn:state.seqIn, seqOut:state.seqOut });
   store.set("coords", state.coords);      // kept on its own so location still works offline
   return "live";
+}
+
+/* A fix is only useful once the two stations have coordinates to compare it
+   with.  When the cached graph has the stops but no lat/lon (an older build's
+   cache), one cheap Route/Sequence call tops up just the coordinates. */
+async function topUpCoords(){
+  try{
+    const seq = await getJSON(`/Line/${LINE}/Route/Sequence/outbound`);
+    const coords = Object.assign({}, state.coords||{});
+    (seq.stopPointSequences||[]).forEach(sp => (sp.stopPoint||[]).forEach(p => {
+      if(p.id && isFinite(p.lat) && isFinite(p.lon)) coords[p.id] = [Number(p.lat), Number(p.lon)];
+    }));
+    state.coords = coords;
+    store.set("coords", coords);
+  }catch(e){ /* location still works from what is cached */ }
 }
 
 /* shortest walk from a to b along the line */
@@ -1777,6 +1854,8 @@ async function refresh(manual){
   if(state.loading) return;
   state.loading = true;
   try{
+    /* a cached graph can carry a full stop map while `coords` is empty (an
+       older build's cache); that is topped up cheaply below, not refetched */
     if(!state.nodes || !state.ids[originKey()] || !state.ids[otherKey()]){
       await loadGraph(false);
       applyPairIfNeeded();
@@ -1811,6 +1890,9 @@ async function refresh(manual){
     state.nextRefreshAt = settings.auto ? Date.now() + settings.refreshMs : 0;
     if(settings.demo){ state.arrivals = sampleArrivals(); state.fetchedAt = Date.now(); }
     renderAll();
+    // coordinates arrive with the TfL graph; when a cached graph has stops
+    // but no lat/lon, top up only the coordinates so location can work
+    if(state.nodes && (!stationCoords().home || !stationCoords().work)) await topUpCoords();
     // station coordinates arrive with the TfL graph; once they are here the
     // "which station am I at" answer can actually be worked out
     if(geo.pos && (geo.verdict === null || geo.verdict === "unknown")){
@@ -2091,6 +2173,14 @@ $("geoLine").addEventListener("click", () => {
     askGeoPermission().then(() => { startGeoWatch(); pollGeoOnce(); });
     return;
   }
+  /* denied: ask the phone again, which is how "Allow while using the app"
+     actually gets granted without leaving the app */
+  if(act === "retry"){
+    $("geoText").textContent = "Asking your phone…";
+    geo.state = "idle"; geo.error = null;
+    askGeoPermission().then(() => { startGeoWatch(); pollGeoOnce(); });
+    return;
+  }
   if(act !== "refresh") return;
   $("geoText").textContent = "Checking where you are…";
   startGeoWatch(); pollGeoOnce();
@@ -2262,7 +2352,9 @@ $("optTheme").addEventListener("change", e => { settings.theme = e.target.value;
 $("optGeo").addEventListener("change", async e => {
   settings.geoOn = e.target.checked; saveSettings();
   if(settings.geoOn){
-    geo.state = "idle"; geo.error = null; geo.verdict = null;
+    /* switched back on: the permission answer is unknown until the phone is
+       asked again, so say "not asked yet" rather than a stale verdict */
+    geo.state = "idle"; geo.error = null; geo.verdict = null; geo.pos = null;
     $("geoState").textContent = "Asking your phone…";
     await askGeoPermission(); startGeoWatch(); await pollGeoOnce();
   }else{
